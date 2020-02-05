@@ -1,0 +1,92 @@
+﻿.networkSpeed{
+    width:inherit;
+    text-align:right;
+}
+
+.navWidth{
+    width:100vw;
+}
+
+.navItemFont{
+    font-size:18px;
+}
+
+.modal{
+    width:100vw;
+}
+
+.navIcon{
+    height:40px;
+    width:45px;
+    float:left;
+}
+
+.navTitle{
+    font-size:30px;
+    height:40px;
+    line-height:40px;
+    transform:scale(0.8,1);
+    float:left;
+}
+
+body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+    width:100vw;
+    overflow-x:hidden;
+}
+
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.breadcrumb{
+    margin-bottom:10px;
+    margin-top:10px;
+}
+
+.alertHeader{
+    padding:10px 15px;
+}
+
+.alertDialog{
+    max-width:300px;
+    margin:80px auto;
+}
+
+.folderIcon {
+    color: #efe065;
+    margin-right:10px;
+}
+
+.fileIcon {
+    color: #4f4f4f;
+    margin-right: 10px;
+}
+
+.entryTable {
+    table-layout:fixed;
+}
+
+.entryTable td{
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.entryTableFolderName {
+    cursor: pointer;
+}
+
+.pathBreadCrumbFoldrName {
+    cursor: pointer;
+}
+
+.tableFileName {
+
+}
+
+.fileInfo{
+    text-align:center;
+}
