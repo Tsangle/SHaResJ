@@ -30,8 +30,12 @@ public class ResourceHandler extends BaseRequestHandler {
                 }
                 String path="/com/tsangle/sharesj/"+requestSocket.GetUrlList().get(1)+"/"+requestSocket.GetUrlList().get(2);
                 InputStream inputStream=this.getClass().getResourceAsStream(path);
-                byte[] resourceData=inputStream.readAllBytes();
-                HandleResponseData(requestSocket,contentType,resourceData);
+                if(inputStream==null){
+                    HandleErrorMessage(requestSocket,"Cannot find the given resource: ["+requestSocket.GetUrlList().get(2)+"]");
+                }else{
+                    byte[] resourceData=inputStream.readAllBytes();
+                    HandleResponseData(requestSocket,contentType,resourceData);
+                }
             }
         }catch (Exception e){
             HandleException(requestSocket,e);

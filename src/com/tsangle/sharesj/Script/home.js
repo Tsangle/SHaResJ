@@ -1,4 +1,15 @@
-﻿var init = function () {
+﻿var alertMessage = function (message, type = "Info", style = "info") {
+    $("<div class='alert alert-" + style + " alert-dismissable fade in'>" +
+        "<strong>" + type + ": </strong>" + message +
+        "</div>").appendTo($("#alertModalBody")).hide().fadeIn();
+    $("#alertModal").modal("show");
+};
+
+$("#alertModal").on("hidden.bs.modal",function(){
+    $("#alertModalBody").html("");
+})
+
+var init = function () {
     var fileInput = $("#fileInput");
     var selectFileButton = $("#selectFileButton");
     var fileNameInput = $("#fileNameInput");
@@ -20,15 +31,6 @@
 
     fileModal.on('hidden.bs.modal', function () {
         fileModalBody.html("");
-    });
-    var alertMessage = function (message, type = "Info", style = "info") {
-        $("<div class='alert alert-" + style + " alert-dismissable fade in'>" +
-            "<strong>" + type + ": </strong>" + message +
-            "</div>").appendTo(alertModalBody).hide().fadeIn();
-        alertModal.modal("show");
-    };
-    alertModal.on('hidden.bs.modal', function () {
-        alertModalBody.html("");
     });
     var resetUpload = function () {
         uploadModal.modal('hide');
