@@ -1,15 +1,4 @@
-﻿var alertMessage = function (message, type = "Info", style = "info") {
-    $("<div class='alert alert-" + style + " alert-dismissable fade in'>" +
-        "<strong>" + type + ": </strong>" + message +
-        "</div>").appendTo($("#alertModalBody")).hide().fadeIn();
-    $("#alertModal").modal("show");
-};
-
-$("#alertModal").on("hidden.bs.modal",function(){
-    $("#alertModalBody").html("");
-})
-
-var init = function () {
+﻿var init = function () {
     var fileInput = $("#fileInput");
     var selectFileButton = $("#selectFileButton");
     var fileNameInput = $("#fileNameInput");
@@ -28,9 +17,23 @@ var init = function () {
     var fileModal = $("#fileModal");
     var fileModalBody = $("#fileModalBody");
     var deleteButton = $("#deleteButton");
+    var downloadButton = $("#downloadButton");
 
     fileModal.on('hidden.bs.modal', function () {
+        var video = document.getElementById("fileModalVideo");
+        if (video !== null) {
+            video.load();
+        }
         fileModalBody.html("");
+    });
+    var alertMessage = function (message, type = "Info", style = "info") {
+        $("<div class='alert alert-" + style + " alert-dismissable fade in'>" +
+            "<strong>" + type + ": </strong>" + message +
+            "</div>").appendTo(alertModalBody).hide().fadeIn();
+        alertModal.modal("show");
+    };
+    alertModal.on('hidden.bs.modal', function () {
+        alertModalBody.html("");
     });
     var resetUpload = function () {
         uploadModal.modal('hide');
@@ -167,6 +170,9 @@ var init = function () {
     });
     deleteButton.click(function () {
         var fullPath = sessionStorage.getItem("path") + "/" + $("#selectedFileName").text();
+        if (sessionStorage.getItem("path") === "") {
+            fullPath = $("#selectedFileName").text();
+        }
         $.post("/Delete/DeleteFile", fullPath, function (data) {
             if (data.slice(0, 1) !== "#") {
                 fileModal.modal("hide");
@@ -175,6 +181,28 @@ var init = function () {
                 alertMessage(data, "Error", "danger");
             }
         });
+    });
+    downloadButton.click(function () {
+        var fullPath = sessionStorage.getItem("path") + "/" + $("#selectedFileName").text();
+        if (sessionStorage.getItem("path") === "") {
+            fullPath = $("#selectedFileName").text();
+        }
+        var downloadForm = $("<form>");
+        downloadForm.attr('style', 'display:none');
+        downloadForm.attr('target', '');
+        downloadForm.attr('method', 'post');
+        downloadForm.attr('action', "/Download/DownloadFile/" + $("#selectedFileName").text());
+        downloadForm.attr('target', '');
+
+        var nameInput = $('<input>');
+        nameInput.attr('type', 'hidden');
+        nameInput.attr('name', 'fileName');
+        nameInput.attr('value', fullPath);
+
+        $('body').append(downloadForm);
+        downloadForm.append(nameInput);
+        downloadForm.submit();
+        downloadForm.remove();
     });
     fileInput.change(function () {
         if (fileInput[0].files.length > 0) {
@@ -185,28 +213,29 @@ var init = function () {
     });
     var getFileSystemEntry = function (path) {
         $.post("/Path/GetFileSystemEntries", path, function (data) {
-            sessionStorage.setItem("path", path);
-            var pathNodeArray = path.split("/");
-            pathBreadCrumb.empty();
-            pathBreadCrumb.append("<li><a class='pathBreadCrumbFoldrName'>Root</a></li>");
-            for (var pathNode of pathNodeArray) {
-                if (pathNode !== "") {
-                    pathBreadCrumb.append("<li><a class='pathBreadCrumbFoldrName'>" + pathNode + "</a></li>");
-                }
-            }
-            $("a.pathBreadCrumbFoldrName").click(function () {
-                var length = $("a.pathBreadCrumbFoldrName").index(this) + 1;
-                var targetPath = "";
-                for (var index = 1; index < length; index++) {
-                    targetPath += $("a.pathBreadCrumbFoldrName").eq(index).text();
-                    if (index < length - 1) {
-                        targetPath += "/";
+            if (data.slice(0,1)!=="#") {
+                sessionStorage.setItem("path", path);
+                var pathNodeArray = path.split("/");
+                pathBreadCrumb.empty();
+                pathBreadCrumb.append("<li><a class='pathBreadCrumbFoldrName'>Root</a></li>");
+                for (var pathNode of pathNodeArray) {
+                    if (pathNode !== "") {
+                        pathBreadCrumb.append("<li><a class='pathBreadCrumbFoldrName'>" + pathNode + "</a></li>");
                     }
                 }
-                getFileSystemEntry(targetPath);
-            });
-            if (data.slice(0,1)!=="#") {
+                $("a.pathBreadCrumbFoldrName").click(function () {
+                    var length = $("a.pathBreadCrumbFoldrName").index(this) + 1;
+                    var targetPath = "";
+                    for (var index = 1; index < length; index++) {
+                        targetPath += $("a.pathBreadCrumbFoldrName").eq(index).text();
+                        if (index < length - 1) {
+                            targetPath += "/";
+                        }
+                    }
+                    getFileSystemEntry(targetPath);
+                });
                 fileListTableBody.empty();
+                console.log(data);
                 var fileSystemEntries = data.split("|");
                 for (var index = 0; index < fileSystemEntries.length - 1; index++) {
                     var entryInfo = fileSystemEntries[index].split("*");
@@ -270,11 +299,15 @@ var init = function () {
         var fileNameArray = fileName.split(".");
         var extendName = fileNameArray[fileNameArray.length - 1];
         if (extendName === "mp4" || extendName === "MP4") {
-            fileModalBody.html("<video width='100%' height='auto'controls>" +
+            fileModalBody.html("<video id='fileModalVideo' width='100%' height='auto'controls>" +
                 "<source src='/Video/PlayVideo/" + sessionStorage.getItem("path") + "/" + fileName +
                 "' type='video/mp4'></video>" +
                 "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");
-        } else {
+        } else if (extendName === "JPG" || extendName === "PNG" || extendName === "GIF" ||
+            extendName === "jpg" || extendName === "png" || extendName === "gif") {
+            fileModalBody.html("<img src='/Image/DisplayImage/" + sessionStorage.getItem("path") + "/" + fileName + "' class='img-thumbnail'>" +
+                "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");
+        }else {
             fileModalBody.html("<div class='fileInfo' style='font-size:80px;color:rgb(190, 190, 190);'>" +
                 "<span class='glyphicon glyphicon-cloud-download'></span></div>" +
                 "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");

@@ -1,5 +1,6 @@
 package com.tsangle.sharesj;
 
+import com.tsangle.sharesj.Handler.PathHandler;
 import com.tsangle.sharesj.HttpServer.HttpListener;
 
 import java.io.*;
@@ -11,14 +12,22 @@ public class SharesDriver {
 
     public static void main(String[] args){
         try {
-            HttpListener listener=new HttpListener(50010);
+            HttpListener listener=new HttpListener(50020);
             listener.Start();
             Scanner scanner=new Scanner(System.in);
-            while (true){
-                String inputString=scanner.nextLine();
-                if(inputString.equals("0")){
-                    listener.Stop();
-                    break;
+            boolean continueScannerLoop=true;
+            while (continueScannerLoop){
+                switch (scanner.nextLine()){
+                    case "exit":
+                        listener.Stop();
+                        continueScannerLoop=false;
+                        break;
+                    case "path":
+                        System.out.println("Set Path:");
+                        String path=scanner.nextLine();
+                        PathHandler.SetRootPath(path);
+                        System.out.println("Root Path is set to:"+path);
+                        break;
                 }
             }
         } catch (Exception e) {

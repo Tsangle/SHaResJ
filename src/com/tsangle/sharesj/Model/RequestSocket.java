@@ -2,6 +2,8 @@ package com.tsangle.sharesj.Model;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,43 +17,63 @@ public class RequestSocket{
     private Socket acceptSocket;
     private String errorString;
     private String url;
+    private byte[] additionalData;
 
     public RequestSocket(Socket acceptSocket){
         this.acceptSocket=acceptSocket;
         this.errorString="";
+        this.additionalData=new byte[0];
         try{
-            BufferedReader bufferedReader = new BufferedReader(
-                    new InputStreamReader(acceptSocket.getInputStream()));
-            StringBuilder stringBuilder=new StringBuilder();
-            for(int inputChar=bufferedReader.read();inputChar!=-1&&bufferedReader.ready();inputChar=bufferedReader.read()){
-                stringBuilder.append((char)inputChar);
-            }
-            String requestString=stringBuilder.toString();
-            logger.info(requestString);
-            String[] requestLineArray=requestString.split(System.lineSeparator());
-            for(String requestLine:requestLineArray){
-                String[] requestArray=requestLine.split(" ");
-                switch (requestArray[0]){
-                    case "GET":
-                        requestType="GET";
-                        if(requestArray[1].equals("/favicon.ico")){
-                            String[] urlArray={"Resource","Img","shares.ico"};
-                            urlList=Arrays.asList(urlArray);
-                            url="/Resource/Img/shares.ico";
-                        }else{
-                            urlList=Arrays.asList(requestArray[1].substring(1).split("/"));
-                            url=requestArray[1];
+            InputStream inputStream=acceptSocket.getInputStream();
+            StringBuilder requestInfoBuilder=new StringBuilder();
+            StringBuilder lineBuilder=new StringBuilder();
+            boolean emptyLineEncountered=false;
+            for(ByteBuffer byteBuffer=ByteBuffer.wrap(inputStream.readNBytes(1));byteBuffer.capacity()>0;byteBuffer=ByteBuffer.wrap(inputStream.readNBytes(1))){
+                char inputChar=StandardCharsets.UTF_8.decode(byteBuffer).get(0);
+                requestInfoBuilder.append(inputChar);
+                if(inputChar=='\r'){
+                    String line=lineBuilder.toString();
+                    lineBuilder.delete(0,lineBuilder.length());
+                    if(line.equals("")){
+                        emptyLineEncountered=true;
+                    }else{
+                        String[] requestArray=line.split(" ");
+                        switch (requestArray[0]){
+                            case "GET":
+                                requestType="GET";
+                                if(requestArray[1].equals("/favicon.ico")){
+                                    String[] urlArray={"Resource","Img","shares.ico"};
+                                    urlList=Arrays.asList(urlArray);
+                                    url="/Resource/Img/shares.ico";
+                                }else{
+                                    urlList=Arrays.asList(requestArray[1].substring(1).split("/"));
+                                    url=requestArray[1];
+                                }
+                                break;
+                            case "Host:":
+                                host=requestArray[1];
+                                break;
+                            case "POST":
+                                requestType="POST";
+                                url=requestArray[1];
+                                urlList= Arrays.asList(requestArray[1].substring(1).split("/"));
+                                break;
+                            case "Content-Length:":
+                                int contentLength=Integer.valueOf(requestArray[1]);
+                                additionalData=new byte[contentLength];
                         }
+                    }
+                }else if(inputChar=='\n'){
+                    if(emptyLineEncountered)
                         break;
-                    case "Host:":
-                        host=requestArray[1];
-                        break;
-                    case "POST":
-                        requestType="POST";
-                        url=requestArray[1];
-                        urlList= Arrays.asList(requestArray[1].substring(1).split("/"));
-                        break;
+                }else{
+                    lineBuilder.append(inputChar);
                 }
+            }
+            String requestInfo=requestInfoBuilder.toString();
+            logger.info(requestInfo);
+            if(this.additionalData.length>0){
+                this.additionalData=inputStream.readNBytes(this.additionalData.length);
             }
         }catch (Exception e){
             StringWriter stringWriter = new StringWriter();
@@ -74,6 +96,10 @@ public class RequestSocket{
 
     public String GetUrl(){
         return url;
+    }
+
+    public byte[] GetAdditionalData(){
+        return additionalData;
     }
 
     public OutputStream GetOutputStream(){

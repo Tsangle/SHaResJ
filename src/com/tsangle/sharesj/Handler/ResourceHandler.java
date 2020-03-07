@@ -10,9 +10,7 @@ public class ResourceHandler extends BaseRequestHandler {
     @Override
     public void Handle(RequestSocket requestSocket) {
         try{
-            if(!requestSocket.CheckUrlListFormat(3)){
-                HandleErrorMessage(requestSocket,"The url format doesn't meet the requirement of [Resource]!");
-            }else{
+            if(requestSocket.CheckUrlListFormat(3)){
                 String contentType;
                 switch (requestSocket.GetUrlList().get(1)){
                     case "Style":
@@ -36,6 +34,8 @@ public class ResourceHandler extends BaseRequestHandler {
                     byte[] resourceData=inputStream.readAllBytes();
                     HandleResponseData(requestSocket,contentType,resourceData);
                 }
+            }else{
+                HandleErrorMessage(requestSocket,"The url format doesn't meet the requirement of [Resource]!");
             }
         }catch (Exception e){
             HandleException(requestSocket,e);
