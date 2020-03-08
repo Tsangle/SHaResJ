@@ -18,7 +18,7 @@ public class HandlerDispenser extends BaseRequestHandler {
 
     @Override
     public void Handle(RequestSocket requestSocket) {
-        String requestTaskType=requestSocket.GetUrlList().get(0);
+        String requestTaskType=requestSocket.GetUrlArray()[0];
         if(handlerMap.containsKey(requestTaskType)){
             handlerMap.get(requestTaskType).Handle(requestSocket);
         }else{

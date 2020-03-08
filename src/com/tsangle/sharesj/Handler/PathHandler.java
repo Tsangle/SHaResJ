@@ -21,13 +21,13 @@ public class PathHandler extends BaseRequestHandler {
         return rootPath;
     }
 
-    private String GenerateRealPath(String logicPath){
+    public static String GenerateRealPath(String logicPath, boolean isFile){
         if(logicPath==null||logicPath.equals("")){
             return rootPath;
         }else{
             String path=rootPath + "/" + logicPath;
-            File dir = new File(path);
-            if (dir.exists() && dir.isDirectory())
+            File file = new File(path);
+            if (file.exists()&&file.isFile()==isFile)
             {
                 return path;
             }
@@ -40,13 +40,14 @@ public class PathHandler extends BaseRequestHandler {
 
     private void GetFileSystemEntries(RequestSocket requestSocket){
         String logicPath=new String(requestSocket.GetAdditionalData(),StandardCharsets.UTF_8);
-        String realPath=GenerateRealPath(logicPath);
+        String realPath=GenerateRealPath(logicPath,false);
         if(realPath.equals("")){
             HandleErrorMessage(requestSocket,"The path does not exist: [" + logicPath + "]");
         }else{
             StringBuilder directoryInfoStringBuilder=new StringBuilder();
             StringBuilder fileInfoStringBuilder=new StringBuilder();
-            File[] fileSystemEntityArray=new File(realPath).listFiles();
+            File dir=new File(realPath);
+            File[] fileSystemEntityArray=dir.listFiles();
             if(fileSystemEntityArray!=null){
                 for(File item : fileSystemEntityArray){
                     String entityName=item.getName();
@@ -74,13 +75,13 @@ public class PathHandler extends BaseRequestHandler {
             if(requestSocket.GetRequestType().equals("GET")){
                 HandleErrorMessage(requestSocket,"The request type of [Path] must be POST!");
             }else{
-                if(requestSocket.CheckUrlListFormat(2)){
-                    switch (requestSocket.GetUrlList().get(1)){
+                if(requestSocket.CheckUrlArrayFormat(2)){
+                    switch (requestSocket.GetUrlArray()[1]){
                         case "GetFileSystemEntries":
                             GetFileSystemEntries(requestSocket);
                             break;
                         default:
-                            HandleErrorMessage(requestSocket,"Cannot find the given task: [" + requestSocket.GetUrlList().get(1) + "]");
+                            HandleErrorMessage(requestSocket,"Cannot find the given task: [" + requestSocket.GetUrlArray()[1] + "]");
                             break;
                     }
                 }else{

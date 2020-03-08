@@ -10,9 +10,9 @@ public class ResourceHandler extends BaseRequestHandler {
     @Override
     public void Handle(RequestSocket requestSocket) {
         try{
-            if(requestSocket.CheckUrlListFormat(3)){
+            if(requestSocket.CheckUrlArrayFormat(3)){
                 String contentType;
-                switch (requestSocket.GetUrlList().get(1)){
+                switch (requestSocket.GetUrlArray()[1]){
                     case "Style":
                         contentType="text/css";
                         break;
@@ -23,13 +23,13 @@ public class ResourceHandler extends BaseRequestHandler {
                         contentType="text/html";
                         break;
                     default:
-                        HandleErrorMessage(requestSocket,"Cannot find the given resource type: [" + requestSocket.GetUrlList().get(1) + "]");
+                        HandleErrorMessage(requestSocket,"Cannot find the given resource type: [" + requestSocket.GetUrlArray()[1] + "]");
                         return;
                 }
-                String path="/com/tsangle/sharesj/"+requestSocket.GetUrlList().get(1)+"/"+requestSocket.GetUrlList().get(2);
+                String path="/com/tsangle/sharesj/"+requestSocket.GetUrlArray()[1]+"/"+requestSocket.GetUrlArray()[2];
                 InputStream inputStream=this.getClass().getResourceAsStream(path);
                 if(inputStream==null){
-                    HandleErrorMessage(requestSocket,"Cannot find the given resource: ["+requestSocket.GetUrlList().get(2)+"]");
+                    HandleErrorMessage(requestSocket,"Cannot find the given resource: ["+requestSocket.GetUrlArray()[2]+"]");
                 }else{
                     byte[] resourceData=inputStream.readAllBytes();
                     HandleResponseData(requestSocket,contentType,resourceData);
