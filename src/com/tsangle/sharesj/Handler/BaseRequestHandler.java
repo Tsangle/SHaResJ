@@ -10,14 +10,8 @@ public abstract class BaseRequestHandler {
 
     void HandleResponseMessage(RequestSocket requestSocket, String contentType, String message){
         try{
-            PrintWriter printWriter = new PrintWriter(
-                    requestSocket.GetOutputStream(), true);
-            printWriter.println("HTTP/1.1 200 OK");
-            printWriter.println("Content-Type:"+contentType+";charset=utf-8");
-            printWriter.println();
-            printWriter.println(message);
-            printWriter.close();
-            requestSocket.Close();
+            byte[] messageData=message.getBytes();
+            HandleResponseData(requestSocket,contentType,messageData);
         }catch (Exception e){
             HandleException(requestSocket,e);
         }
@@ -30,7 +24,10 @@ public abstract class BaseRequestHandler {
 
     void HandleResponseData(RequestSocket requestSocket, String contentType, byte[] data){
         try{
-            String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+"Content-Type:"+contentType+";charset=utf-8"+System.lineSeparator()+System.lineSeparator();
+            String responseHeader="HTTP/1.1 "+requestSocket.GetStatusCode()+" OK"+System.lineSeparator()+
+                    "Content-Type:"+contentType+";charset=utf-8"+System.lineSeparator()+
+                    requestSocket.GetAdditionalResponseHeaders()+
+                    System.lineSeparator();
             OutputStream outputStream=requestSocket.GetOutputStream();
             outputStream.write(responseHeader.getBytes());
             outputStream.write(data);

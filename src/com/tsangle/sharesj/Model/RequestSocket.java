@@ -17,12 +17,17 @@ public class RequestSocket{
     private Socket acceptSocket;
     private String errorString;
     private String url;
+    private String range;
     private byte[] additionalData;
+    private StringBuilder additionResponseHeaderBuilder;
+    private String statusCode;
 
     public RequestSocket(Socket acceptSocket){
         this.acceptSocket=acceptSocket;
         this.errorString="";
         this.additionalData=new byte[0];
+        this.additionResponseHeaderBuilder=new StringBuilder();
+        this.statusCode="200";
         try{
             InputStream inputStream=acceptSocket.getInputStream();
             StringBuilder requestInfoBuilder=new StringBuilder();
@@ -56,6 +61,9 @@ public class RequestSocket{
                             case "Content-Length:":
                                 int contentLength=Integer.valueOf(requestArray[1]);
                                 additionalData=new byte[contentLength];
+                            case "Range:":
+                                range=requestArray[1];
+                                break;
                         }
                     }
                 }else if(inputChar=='\n'){
@@ -95,6 +103,27 @@ public class RequestSocket{
 
     public byte[] GetAdditionalData(){
         return additionalData;
+    }
+
+    public String GetRange(){
+        return range;
+    }
+
+    public void AddAdditionalResponseHeader(String header){
+        this.additionResponseHeaderBuilder.append(header);
+        this.additionResponseHeaderBuilder.append(System.lineSeparator());
+    }
+
+    public String GetAdditionalResponseHeaders(){
+        return this.additionResponseHeaderBuilder.toString();
+    }
+
+    public void SetStatusCode(String code){
+        this.statusCode=code;
+    }
+
+    public String GetStatusCode(){
+        return this.statusCode;
     }
 
     public OutputStream GetOutputStream(){

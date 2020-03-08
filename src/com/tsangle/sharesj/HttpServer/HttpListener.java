@@ -1,9 +1,6 @@
 package com.tsangle.sharesj.HttpServer;
 
-import com.tsangle.sharesj.Handler.HandlerDispenser;
-import com.tsangle.sharesj.Handler.ImageHandler;
-import com.tsangle.sharesj.Handler.PathHandler;
-import com.tsangle.sharesj.Handler.ResourceHandler;
+import com.tsangle.sharesj.Handler.*;
 import com.tsangle.sharesj.Model.RequestSocket;
 
 import java.io.*;
@@ -28,6 +25,7 @@ public class HttpListener {
             handlerDispenser.AddHandler(new ResourceHandler());
             handlerDispenser.AddHandler(new PathHandler());
             handlerDispenser.AddHandler(new ImageHandler());
+            handlerDispenser.AddHandler(new VideoHandler());
         }catch (Exception e){
             StringWriter stringWriter = new StringWriter();
             e.printStackTrace(new PrintWriter(stringWriter));

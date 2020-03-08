@@ -235,7 +235,6 @@
                     getFileSystemEntry(targetPath);
                 });
                 fileListTableBody.empty();
-                console.log(data);
                 var fileSystemEntries = data.split("|");
                 for (var index = 0; index < fileSystemEntries.length - 1; index++) {
                     var entryInfo = fileSystemEntries[index].split("*");
