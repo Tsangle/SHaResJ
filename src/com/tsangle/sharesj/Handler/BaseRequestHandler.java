@@ -3,6 +3,7 @@ package com.tsangle.sharesj.Handler;
 import com.tsangle.sharesj.Model.RequestSocket;
 
 import java.io.*;
+import java.net.SocketException;
 import java.util.logging.Logger;
 
 public abstract class BaseRequestHandler {
@@ -34,6 +35,8 @@ public abstract class BaseRequestHandler {
             outputStream.flush();
             outputStream.close();
             requestSocket.Close();
+        }catch (SocketException e){
+            logger.info("Abort writing data: "+e.getMessage()+System.lineSeparator());
         }catch (Exception e){
             HandleException(requestSocket,e);
         }
