@@ -23,7 +23,7 @@ public class HttpListener {
             serverSocket=new ServerSocket(port);
             handlerDispenser =new HandlerDispenser();
             handlerDispenser.AddHandler(new ResourceHandler());
-            handlerDispenser.AddHandler(new PathHandler());
+            handlerDispenser.AddHandler(new FileHandler());
             handlerDispenser.AddHandler(new ImageHandler());
             handlerDispenser.AddHandler(new VideoHandler());
         }catch (Exception e){
@@ -37,7 +37,7 @@ public class HttpListener {
         class HandleRequestRunnable implements Runnable{
             private RequestSocket requestSocket;
 
-            public HandleRequestRunnable(RequestSocket requestSocket){
+            HandleRequestRunnable(RequestSocket requestSocket){
                 this.requestSocket=requestSocket;
             }
 

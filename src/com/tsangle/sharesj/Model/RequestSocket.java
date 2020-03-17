@@ -4,9 +4,6 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Logger;
 
 public class RequestSocket{
@@ -143,17 +140,6 @@ public class RequestSocket{
 
     public void SetErrorString(String errorString){
         this.errorString=errorString;
-    }
-
-    public InputStream GetInputStream(){
-        try{
-            return acceptSocket.getInputStream();
-        }catch (Exception e){
-            StringWriter stringWriter = new StringWriter();
-            e.printStackTrace(new PrintWriter(stringWriter));
-            logger.warning(stringWriter.toString());
-            return null;
-        }
     }
 
     public void Close(){

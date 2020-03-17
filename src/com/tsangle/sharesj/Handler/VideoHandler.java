@@ -15,7 +15,7 @@ public class VideoHandler extends BaseRequestHandler{
             if(requestSocket.CheckUrlArrayFormat(3)){
                 switch (requestSocket.GetUrlArray()[1]){
                     case "PlayVideo":
-                        String videoPath = PathHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetUrlArray()[2], StandardCharsets.UTF_8),true);
+                        String videoPath = FileHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetUrlArray()[2], StandardCharsets.UTF_8),true);
                         File videoFile=new File(videoPath);
                         if (videoFile.exists())
                         {

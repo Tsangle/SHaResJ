@@ -18,6 +18,7 @@
     var fileModalBody = $("#fileModalBody");
     var deleteButton = $("#deleteButton");
     var downloadButton = $("#downloadButton");
+    var fileUploader;
 
     fileModal.on('hidden.bs.modal', function () {
         var video = document.getElementById("fileModalVideo");
@@ -67,12 +68,13 @@
             this.timeBeforeUpload = 0;
             this.notifyFunc = notifyFunc;
             this.serverCacheID = 0;
+            this.isCanceled = false;
         }
 
         startUpload() {
             var fileInfo = this.path + "|" + this.fileName + "|" + this.threadCount + "|" + this.totalChunkCount;
             var thisObj = this;
-            $.post("/Upload/FileInfo", fileInfo, function (data) {
+            $.post("/File/SetFileInfo", fileInfo, function (data) {
                 if (data.slice(0, 1) !== "#") {
                     thisObj.serverCacheID = data;
                     thisObj.timeBeforeUpload = Date.now();
@@ -81,6 +83,19 @@
                     }
                 } else {
                     resetUpload();
+                    alertMessage(data, "Error", "danger");
+                }
+            });
+        }
+
+        cancelUpload(){
+            var thisObj = this;
+            thisObj.isCanceled = true;
+            $.post("/File/CancelUpload", thisObj.serverCacheID, function (data) {
+                resetUpload();
+                if (data.slice(0, 1) !== "#") {
+                    alertMessage("Uploading task canceled!", "Info", "success");
+                } else {
                     alertMessage(data, "Error", "danger");
                 }
             });
@@ -104,7 +119,7 @@
                     httpRequest.onreadystatechange = function () {
                         thisObj._uploadCallback(index, reader, httpRequest, thisObj);
                     };
-                    httpRequest.open("POST", "/Upload/UploadChunk");
+                    httpRequest.open("POST", "/File/UploadFileChunk");
                     httpRequest.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
                     var data = thisObj.serverCacheID + "|" + index + "|" + chunkContent;
                     httpRequest.send(data);
@@ -118,8 +133,10 @@
                 var responseText = httpRequest.responseText;
                 if (responseText.slice(0,1) === "#") {
                     thisObj.errorDetected = true;
-                    alertMessage(responseText, "Error", "danger");
-                    resetUpload();
+                    if(!thisObj.isCanceled){
+                        alertMessage(responseText, "Error", "danger");
+                        resetUpload();
+                    }
                 } else {
                     thisObj.uploadedChunkCount++;
                     var completedPercentage = thisObj.uploadedChunkCount / thisObj.totalChunkCount * 100;
@@ -158,22 +175,21 @@
             var chunkSize = 5000000;
             var uploadThreadCount = 6;
             var intervalTime = 50;
-            var uploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), chunkSize, uploadThreadCount, intervalTime, notifyUploadResult);
-            uploader.startUpload();
+            fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), chunkSize, uploadThreadCount, intervalTime, notifyUploadResult);
+            fileUploader.startUpload();
         } else {
             alertMessage("Please select a file!", "Warning", "warning");
         }
     });
     cancelUploadButton.click(function () {
-        errorDetected = true;
-        resetUpload();
+        fileUploader.cancelUpload();
     });
     deleteButton.click(function () {
         var fullPath = sessionStorage.getItem("path") + "/" + $("#selectedFileName").text();
         if (sessionStorage.getItem("path") === "") {
             fullPath = $("#selectedFileName").text();
         }
-        $.post("/Delete/DeleteFile", fullPath, function (data) {
+        $.post("/File/DeleteFile", fullPath, function (data) {
             if (data.slice(0, 1) !== "#") {
                 fileModal.modal("hide");
                 refreshFileSystemEntryList();
@@ -191,7 +207,7 @@
         downloadForm.attr('style', 'display:none');
         downloadForm.attr('target', '');
         downloadForm.attr('method', 'post');
-        downloadForm.attr('action', "/Download/DownloadFile/" + $("#selectedFileName").text());
+        downloadForm.attr('action', "/File/DownloadFile");
         downloadForm.attr('target', '');
 
         var nameInput = $('<input>');
@@ -212,7 +228,7 @@
         }
     });
     var getFileSystemEntry = function (path) {
-        $.post("/Path/GetFileSystemEntries", path, function (data) {
+        $.post("/File/GetFileSystemEntries", path, function (data) {
             if (data.slice(0,1)!=="#") {
                 sessionStorage.setItem("path", path);
                 var pathNodeArray = path.split("/");

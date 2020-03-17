@@ -1,6 +1,6 @@
 package com.tsangle.sharesj;
 
-import com.tsangle.sharesj.Handler.PathHandler;
+import com.tsangle.sharesj.Handler.FileHandler;
 import com.tsangle.sharesj.HttpServer.HttpListener;
 
 import java.io.*;
@@ -25,7 +25,7 @@ public class SharesDriver {
                     case "path":
                         System.out.println("Set Path:");
                         String path=scanner.nextLine();
-                        PathHandler.SetRootPath(path);
+                        FileHandler.SetRootPath(path);
                         System.out.println("Root Path is set to:"+path);
                         break;
                 }
