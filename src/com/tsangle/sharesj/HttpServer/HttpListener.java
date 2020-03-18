@@ -35,16 +35,16 @@ public class HttpListener {
 
     class AcceptRequestRunnable implements Runnable{
         class HandleRequestRunnable implements Runnable{
-            private RequestSocket requestSocket;
+            private Socket socket;
 
-            HandleRequestRunnable(RequestSocket requestSocket){
-                this.requestSocket=requestSocket;
+            HandleRequestRunnable(Socket socket){
+                this.socket=socket;
             }
 
             @Override
             public void run() {
                 try{
-                    handlerDispenser.Handle(requestSocket);
+                    handlerDispenser.Handle(new RequestSocket(socket));
                 }catch (Exception e){
                     StringWriter stringWriter = new StringWriter();
                     e.printStackTrace(new PrintWriter(stringWriter));
@@ -58,9 +58,8 @@ public class HttpListener {
             try{
                 while (true){
                     Socket socket=serverSocket.accept();
-                    RequestSocket requestSocket=new RequestSocket(socket);
-                    if(requestSocket.GetHost()!=null&&!requestSocket.GetHost().isEmpty()){
-                        Runnable runnable=new HandleRequestRunnable(requestSocket);
+                    if(socket!=null){
+                        Runnable runnable=new HandleRequestRunnable(socket);
                         Thread thread=new Thread(runnable);
                         thread.start();
                     }

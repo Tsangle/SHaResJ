@@ -18,17 +18,19 @@ public class HandlerDispenser extends BaseRequestHandler {
 
     @Override
     public void Handle(RequestSocket requestSocket) {
-        String requestTaskType=requestSocket.GetUrlArray()[0];
-        if(handlerMap.containsKey(requestTaskType)){
-            handlerMap.get(requestTaskType).Handle(requestSocket);
-        }else{
-            HandleErrorMessage(requestSocket,"Cannot find the given task type: [" + requestTaskType + "]");
-        }
-        if(!requestSocket.isClosed()){
-            if(requestSocket.GetErrorString().isEmpty())
-                HandleErrorMessage(requestSocket,requestSocket.GetRequestType()+" "+requestSocket.GetUrl()+": Unknown Error!");
-            else
-                HandleErrorMessage(requestSocket,requestSocket.GetErrorString());
+        if(requestSocket.GetUrlArray()!=null){
+            String requestTaskType=requestSocket.GetUrlArray()[0];
+            if(handlerMap.containsKey(requestTaskType)){
+                handlerMap.get(requestTaskType).Handle(requestSocket);
+            }else{
+                HandleErrorMessage(requestSocket,"Cannot find the given task type: [" + requestTaskType + "]");
+            }
+            if(!requestSocket.isClosed()){
+                if(requestSocket.GetErrorString().isEmpty())
+                    HandleErrorMessage(requestSocket,requestSocket.GetRequestType()+" "+requestSocket.GetUrl()+": Unknown Error!");
+                else
+                    HandleErrorMessage(requestSocket,requestSocket.GetErrorString());
+            }
         }
     }
 }

@@ -113,19 +113,17 @@
             reader.onload = function () {
                 if (!thisObj.errorDetected) {
                     var chunkContent = this.result;
-                    chunkContent = chunkContent.substring(chunkContent.indexOf(",") + 1, chunkContent.length);
                     var httpRequest = new XMLHttpRequest();
                     httpRequest.overrideMimeType("text/xml");
                     httpRequest.onreadystatechange = function () {
                         thisObj._uploadCallback(index, reader, httpRequest, thisObj);
                     };
-                    httpRequest.open("POST", "/File/UploadFileChunk");
+                    httpRequest.open("POST", "/File/UploadFileChunk/"+thisObj.serverCacheID+"&"+index);
                     httpRequest.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
-                    var data = thisObj.serverCacheID + "|" + index + "|" + chunkContent;
-                    httpRequest.send(data);
+                    httpRequest.send(chunkContent);
                 }
             };
-            reader.readAsDataURL(currentChunk, "UTF-8");
+            reader.readAsArrayBuffer(currentChunk);
         }
 
         _uploadCallback(index, reader, httpRequest, thisObj) {

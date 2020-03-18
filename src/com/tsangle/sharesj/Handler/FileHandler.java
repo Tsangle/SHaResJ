@@ -102,10 +102,9 @@ public class FileHandler extends BaseRequestHandler {
     }
 
     private void StoreFileChunk(RequestSocket requestSocket){
-        String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        String[] strDataArray = strDataContent.split("\\|", 3);
-        int serverCacheID = Integer.valueOf(strDataArray[0]);
-        int chunkOrder = Integer.valueOf(strDataArray[1]);
+        String[] chunkInfo=requestSocket.GetUrlArray()[2].split("&");
+        int serverCacheID = Integer.valueOf(chunkInfo[0]);
+        int chunkOrder = Integer.valueOf(chunkInfo[1]);
         FileContainer container;
         synchronized (syncObject){
             container=fileContainerDictionary.get(serverCacheID);
@@ -114,7 +113,7 @@ public class FileHandler extends BaseRequestHandler {
             HandleErrorMessage(requestSocket, "Can't find the specified cache ID: [" + serverCacheID + "]");
         }else{
             FileChunk fileChunk = new FileChunk();
-            fileChunk.SetChunkData(Base64.getDecoder().decode(strDataArray[2]));
+            fileChunk.SetChunkData(requestSocket.GetAdditionalData());
             if(container.AddNewChunk(fileChunk, chunkOrder))
             {
                 synchronized (syncObject){
@@ -192,9 +191,6 @@ public class FileHandler extends BaseRequestHandler {
                         case "SetFileInfo":
                             SetFileInfo(requestSocket);
                             break;
-                        case "UploadFileChunk":
-                            StoreFileChunk(requestSocket);
-                            break;
                         case "CancelUpload":
                             CancelStoreFile(requestSocket);
                             break;
@@ -207,6 +203,10 @@ public class FileHandler extends BaseRequestHandler {
                         default:
                             HandleErrorMessage(requestSocket,"Cannot find the given task: [" + requestSocket.GetUrlArray()[1] + "]");
                             break;
+                    }
+                }else if(requestSocket.CheckUrlArrayFormat(3)){
+                    if(requestSocket.GetUrlArray()[1].equals("UploadFileChunk")){
+                        StoreFileChunk(requestSocket);
                     }
                 }else{
                     HandleErrorMessage(requestSocket,"The url format doesn't meet the requirement of [File]!");
