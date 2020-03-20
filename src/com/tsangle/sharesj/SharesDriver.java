@@ -16,17 +16,21 @@ public class SharesDriver {
             listener.Start();
             Scanner scanner=new Scanner(System.in);
             boolean continueScannerLoop=true;
+            System.out.println("Enter [P] to set the root path or enter [E] to exit:");
             while (continueScannerLoop){
                 switch (scanner.nextLine()){
-                    case "exit":
+                    case "e":
+                    case "E":
+                        System.out.println("exiting...");
                         listener.Stop();
                         continueScannerLoop=false;
                         break;
-                    case "path":
+                    case "p":
+                    case "P":
                         System.out.println("Set Path:");
                         String path=scanner.nextLine();
                         FileHandler.SetRootPath(path);
-                        System.out.println("Root Path is set to:"+path);
+                        System.out.println("Root Path is set to: ["+path+"]");
                         break;
                 }
             }

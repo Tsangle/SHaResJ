@@ -4,8 +4,10 @@ import com.tsangle.sharesj.Model.RequestSocket;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.GZIPOutputStream;
 
 public class VideoHandler extends BaseRequestHandler{
     private static final int chunkSize=40000000;
@@ -45,8 +47,18 @@ public class VideoHandler extends BaseRequestHandler{
                                     HandleErrorMessage(requestSocket,"Fail to handle the start index: [" + startIndex + "]");
                                 }
                             }else{
-                                byte[] videoData=inputStream.readAllBytes();
-                                HandleResponseData(requestSocket,"video/mp4",videoData);
+                                String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
+                                        "Content-Type:video/mp4;charset=utf-8"+System.lineSeparator()+
+                                        "Content-Length:"+videoFile.length()+System.lineSeparator()+
+                                        System.lineSeparator();
+                                OutputStream outputStream=requestSocket.GetOutputStream();
+                                outputStream.write(responseHeader.getBytes());
+                                for(byte[] chunkData=inputStream.readNBytes(chunkSize);chunkData.length>0;chunkData=inputStream.readNBytes(chunkSize)){
+                                    outputStream.write(chunkData);
+                                    outputStream.flush();
+                                }
+                                outputStream.close();
+                                requestSocket.Close();
                             }
                             inputStream.close();
                         }

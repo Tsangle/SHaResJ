@@ -6,6 +6,7 @@ import com.tsangle.sharesj.Model.RequestSocket;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -147,9 +148,19 @@ public class FileHandler extends BaseRequestHandler {
             if (targetFile.exists())
             {
                 FileInputStream inputStream=new FileInputStream(path);
-                byte[] fileData=inputStream.readAllBytes();
-                requestSocket.AddAdditionalResponseHeader("Content-Disposition:attachment; filename="+targetFile.getName());
-                HandleResponseData(requestSocket,"*/*",fileData);
+                int chunkLength=50000000;
+                String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
+                        "Content-Length:"+targetFile.length()+System.lineSeparator()+
+                        "Content-Disposition:attachment; filename="+targetFile.getName()+System.lineSeparator()+
+                        System.lineSeparator();
+                OutputStream outputStream=requestSocket.GetOutputStream();
+                outputStream.write(responseHeader.getBytes());
+                for(byte[] chunkData=inputStream.readNBytes(chunkLength);chunkData.length>0;chunkData=inputStream.readNBytes(chunkLength)){
+                    outputStream.write(chunkData);
+                    outputStream.flush();
+                }
+                outputStream.close();
+                requestSocket.Close();
             }
             else
             {

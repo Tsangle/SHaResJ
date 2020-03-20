@@ -18,6 +18,7 @@ public class RequestSocket{
     private byte[] additionalData;
     private StringBuilder additionResponseHeaderBuilder;
     private String statusCode;
+    private String acceptEncoding;
 
     public RequestSocket(Socket acceptSocket){
         this.acceptSocket=acceptSocket;
@@ -54,6 +55,9 @@ public class RequestSocket{
                                 break;
                             case "Host:":
                                 host=requestArray[1];
+                                break;
+                            case "Accept-Encoding:":
+                                acceptEncoding=requestArray[1];
                                 break;
                             case "Content-Length:":
                                 int contentLength=Integer.valueOf(requestArray[1]);
@@ -121,6 +125,10 @@ public class RequestSocket{
 
     public String GetStatusCode(){
         return this.statusCode;
+    }
+
+    public String GetAcceptEncoding(){
+        return this.acceptEncoding;
     }
 
     public OutputStream GetOutputStream(){
