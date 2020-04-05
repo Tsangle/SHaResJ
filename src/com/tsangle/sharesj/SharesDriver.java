@@ -12,7 +12,7 @@ public class SharesDriver {
 
     public static void main(String[] args){
         try {
-            HttpListener listener=new HttpListener(50020);
+            HttpListener listener=new HttpListener();
             listener.Start();
             Scanner scanner=new Scanner(System.in);
             boolean continueScannerLoop=true;

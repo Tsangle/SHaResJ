@@ -27,11 +27,13 @@ public class RequestSocket{
         this.additionResponseHeaderBuilder=new StringBuilder();
         this.statusCode="200";
         try{
-            InputStream inputStream=acceptSocket.getInputStream();
+            DataInputStream inputStream=new DataInputStream(acceptSocket.getInputStream());
             StringBuilder requestInfoBuilder=new StringBuilder();
             StringBuilder lineBuilder=new StringBuilder();
             boolean emptyLineEncountered=false;
-            for(ByteBuffer byteBuffer=ByteBuffer.wrap(inputStream.readNBytes(1));byteBuffer.capacity()>0;byteBuffer=ByteBuffer.wrap(inputStream.readNBytes(1))){
+            for(int inputData=inputStream.read();inputData!=-1;inputData=inputStream.read()){
+                byte[] byteArray={(byte)inputData};
+                ByteBuffer byteBuffer=ByteBuffer.wrap(byteArray);
                 char inputChar=StandardCharsets.UTF_8.decode(byteBuffer).get(0);
                 requestInfoBuilder.append(inputChar);
                 if(inputChar=='\r'){
@@ -77,7 +79,7 @@ public class RequestSocket{
             String requestInfo=requestInfoBuilder.toString();
             logger.info(requestInfo);
             if(this.additionalData.length>0){
-                this.additionalData=inputStream.readNBytes(this.additionalData.length);
+                inputStream.readFully(this.additionalData);
             }
         }catch (Exception e){
             StringWriter stringWriter = new StringWriter();

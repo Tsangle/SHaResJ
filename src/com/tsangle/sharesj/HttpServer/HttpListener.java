@@ -18,9 +18,9 @@ public class HttpListener {
 
     private HandlerDispenser handlerDispenser;
 
-    public HttpListener(int port){
+    public HttpListener(){
         try{
-            serverSocket=new ServerSocket(port);
+            serverSocket=new ServerSocket(10320);
             handlerDispenser =new HandlerDispenser();
             handlerDispenser.AddHandler(new ResourceHandler());
             handlerDispenser.AddHandler(new FileHandler());

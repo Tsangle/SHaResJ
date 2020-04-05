@@ -2,6 +2,7 @@ package com.tsangle.sharesj.Handler;
 
 import com.tsangle.sharesj.Model.RequestSocket;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.logging.Logger;
 
@@ -31,8 +32,12 @@ public class ResourceHandler extends BaseRequestHandler {
                 if(inputStream==null){
                     HandleErrorMessage(requestSocket,"Cannot find the given resource: ["+requestSocket.GetUrlArray()[2]+"]");
                 }else{
-                    byte[] resourceData=inputStream.readAllBytes();
-                    HandleResponseData(requestSocket,contentType,resourceData);
+                    ByteArrayOutputStream outputStream=new ByteArrayOutputStream();
+                    byte[] buffer=new byte[1000];
+                    for(int result=inputStream.read(buffer,0,buffer.length);result!=-1;result=inputStream.read(buffer,0,buffer.length)){
+                        outputStream.write(buffer,0,result);
+                    }
+                    HandleResponseData(requestSocket,contentType,outputStream.toByteArray());
                 }
             }else{
                 HandleErrorMessage(requestSocket,"The url format doesn't meet the requirement of [Resource]!");

@@ -41,7 +41,12 @@ public class FileContainer {
         syncChunkCount=new Object();
         syncCanceledFlag=new Object();
         latch=new CountDownLatch(1);
-        outputThread=new Thread(this::OutputChunk);
+        outputThread=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                OutputChunk();
+            }
+        });
         outputThread.start();
     }
 

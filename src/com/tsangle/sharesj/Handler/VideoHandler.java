@@ -7,9 +7,12 @@ import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
 public class VideoHandler extends BaseRequestHandler{
+    private static Logger logger=Logger.getLogger(VideoHandler.class.getName());
+
     private static final int chunkSize=40000000;
     @Override
     public void Handle(RequestSocket requestSocket) {
@@ -17,7 +20,7 @@ public class VideoHandler extends BaseRequestHandler{
             if(requestSocket.CheckUrlArrayFormat(3)){
                 switch (requestSocket.GetUrlArray()[1]){
                     case "PlayVideo":
-                        String videoPath = FileHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetUrlArray()[2], StandardCharsets.UTF_8),true);
+                        String videoPath = FileHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetUrlArray()[2]),true);
                         File videoFile=new File(videoPath);
                         if (videoFile.exists())
                         {
@@ -40,7 +43,10 @@ public class VideoHandler extends BaseRequestHandler{
                                 long skippedLength=inputStream.skip(startIndex);
                                 if(skippedLength==startIndex){
                                     long currentChunkLength=endIndex-startIndex+1;
-                                    byte[] videoChunkData=inputStream.readNBytes((int)currentChunkLength);
+                                    byte[] videoChunkData=new byte[(int)currentChunkLength];
+                                    if(inputStream.read(videoChunkData,0,(int)currentChunkLength)==-1){
+                                        HandleErrorMessage(requestSocket,"Fail to read chunk from video file.");
+                                    }
                                     requestSocket.SetStatusCode("206");
                                     HandleResponseData(requestSocket,"video/mp4",videoChunkData);
                                 }else{
@@ -53,7 +59,11 @@ public class VideoHandler extends BaseRequestHandler{
                                         System.lineSeparator();
                                 OutputStream outputStream=requestSocket.GetOutputStream();
                                 outputStream.write(responseHeader.getBytes());
-                                for(byte[] chunkData=inputStream.readNBytes(chunkSize);chunkData.length>0;chunkData=inputStream.readNBytes(chunkSize)){
+                                for(byte[] chunkData=new byte[chunkSize];;){
+                                    if(inputStream.read(chunkData,0,chunkSize)==-1){
+                                        logger.info("Video data reading finished.");
+                                        break;
+                                    }
                                     outputStream.write(chunkData);
                                     outputStream.flush();
                                 }
