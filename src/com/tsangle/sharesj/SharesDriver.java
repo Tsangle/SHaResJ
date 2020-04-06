@@ -2,8 +2,10 @@ package com.tsangle.sharesj;
 
 import com.tsangle.sharesj.Handler.FileHandler;
 import com.tsangle.sharesj.HttpServer.HttpListener;
+import com.tsangle.sharesj.Model.MachineInfo;
 
 import java.io.*;
+import java.net.Inet4Address;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
@@ -13,10 +15,16 @@ public class SharesDriver {
     public static void main(String[] args){
         try {
             HttpListener listener=new HttpListener();
-            listener.Start();
             Scanner scanner=new Scanner(System.in);
+            System.out.println("Please input the path of shared folder:");
+            String path=scanner.nextLine();
+            MachineInfo.GetInstance().SetRootPath(path);
+            System.out.println("Please input the name of this machine:");
+            String machineName=scanner.nextLine();
+            MachineInfo.GetInstance().SetMachineName(machineName);
+            listener.Start();
             boolean continueScannerLoop=true;
-            System.out.println("Enter [P] to set the root path or enter [E] to exit:");
+            System.out.println("You can enter [E] to exit.");
             while (continueScannerLoop){
                 switch (scanner.nextLine()){
                     case "e":
@@ -24,13 +32,6 @@ public class SharesDriver {
                         System.out.println("exiting...");
                         listener.Stop();
                         continueScannerLoop=false;
-                        break;
-                    case "p":
-                    case "P":
-                        System.out.println("Set Path:");
-                        String path=scanner.nextLine();
-                        FileHandler.SetRootPath(path);
-                        System.out.println("Root Path is set to: ["+path+"]");
                         break;
                 }
             }

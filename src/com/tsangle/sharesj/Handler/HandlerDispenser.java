@@ -20,6 +20,9 @@ public class HandlerDispenser extends BaseRequestHandler {
     public void Handle(RequestSocket requestSocket) {
         if(requestSocket.GetUrlArray()!=null){
             String requestTaskType=requestSocket.GetUrlArray()[0];
+            if(requestSocket.GetHost()[0].equals("localhost")){
+                requestTaskType="Local"+requestTaskType;
+            }
             if(handlerMap.containsKey(requestTaskType)){
                 handlerMap.get(requestTaskType).Handle(requestSocket);
             }else{
@@ -31,6 +34,7 @@ public class HandlerDispenser extends BaseRequestHandler {
                 else
                     HandleErrorMessage(requestSocket,requestSocket.GetErrorString());
             }
+            System.gc();
         }
     }
 }

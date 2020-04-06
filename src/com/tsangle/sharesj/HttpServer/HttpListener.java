@@ -1,6 +1,11 @@
 package com.tsangle.sharesj.HttpServer;
 
 import com.tsangle.sharesj.Handler.*;
+import com.tsangle.sharesj.Handler.Local.LocalFileHandler;
+import com.tsangle.sharesj.Handler.Local.LocalImageHandler;
+import com.tsangle.sharesj.Handler.Local.LocalResourceHandler;
+import com.tsangle.sharesj.Handler.Local.LocalVideoHandler;
+import com.tsangle.sharesj.Model.MachineInfo;
 import com.tsangle.sharesj.Model.RequestSocket;
 
 import java.io.*;
@@ -20,12 +25,16 @@ public class HttpListener {
 
     public HttpListener(){
         try{
-            serverSocket=new ServerSocket(10320);
+            serverSocket=new ServerSocket(MachineInfo.GetInstance().GetPort());
             handlerDispenser =new HandlerDispenser();
             handlerDispenser.AddHandler(new ResourceHandler());
             handlerDispenser.AddHandler(new FileHandler());
             handlerDispenser.AddHandler(new ImageHandler());
             handlerDispenser.AddHandler(new VideoHandler());
+            handlerDispenser.AddHandler(new LocalResourceHandler());
+            handlerDispenser.AddHandler(new LocalFileHandler());
+            handlerDispenser.AddHandler(new LocalImageHandler());
+            handlerDispenser.AddHandler(new LocalVideoHandler());
         }catch (Exception e){
             StringWriter stringWriter = new StringWriter();
             e.printStackTrace(new PrintWriter(stringWriter));

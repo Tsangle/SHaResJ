@@ -10,7 +10,7 @@ public class RequestSocket{
     private static Logger logger=Logger.getLogger(RequestSocket.class.getName());
     private String[] urlArray;
     private String requestType;
-    private String host;
+    private String[] host;
     private Socket acceptSocket;
     private String errorString;
     private String url;
@@ -50,13 +50,16 @@ public class RequestSocket{
                                 if(requestArray[1].equals("/favicon.ico")){
                                     urlArray=new String[]{"Resource","Img","shares.ico"};
                                     url="/Resource/Img/shares.ico";
+                                }else if(requestArray[1].equals("/")){
+                                    urlArray=new String[]{"Resource","Page","Home.html"};
+                                    url="/Resource/Page/Home.html";
                                 }else{
                                     urlArray=requestArray[1].substring(1).split("/",3);
                                     url=requestArray[1];
                                 }
                                 break;
                             case "Host:":
-                                host=requestArray[1];
+                                host=requestArray[1].split(":",2);
                                 break;
                             case "Accept-Encoding:":
                                 acceptEncoding=requestArray[1];
@@ -96,7 +99,7 @@ public class RequestSocket{
         return requestType;
     }
 
-    public String GetHost() {
+    public String[] GetHost() {
         return host;
     }
 

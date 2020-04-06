@@ -2,6 +2,7 @@ package com.tsangle.sharesj.Handler;
 
 import com.tsangle.sharesj.Model.FileChunk;
 import com.tsangle.sharesj.Model.FileContainer;
+import com.tsangle.sharesj.Model.MachineInfo;
 import com.tsangle.sharesj.Model.RequestSocket;
 
 import java.io.File;
@@ -20,12 +21,6 @@ public class FileHandler extends BaseRequestHandler {
 
     private final Object syncObject;
 
-    private static String rootPath;
-
-    public static void SetRootPath(String path){
-        rootPath=path;
-    }
-
     public FileHandler(){
         fileContainerDictionary=new Hashtable<>();
         syncObject=new Object();
@@ -33,9 +28,9 @@ public class FileHandler extends BaseRequestHandler {
 
     static String GenerateRealPath(String logicPath, boolean isFile){
         if(logicPath==null||logicPath.equals("")){
-            return rootPath;
+            return MachineInfo.GetInstance().GetRootPath();
         }else{
-            String path=rootPath + "/" + logicPath;
+            String path=MachineInfo.GetInstance().GetRootPath() + "/" + logicPath;
             File file = new File(path);
             if (file.exists()&&file.isFile()==isFile)
             {
@@ -48,7 +43,7 @@ public class FileHandler extends BaseRequestHandler {
         }
     }
 
-    private void ReturnFileSystemEntries(RequestSocket requestSocket){
+    protected void ReturnFileSystemEntries(RequestSocket requestSocket){
         String logicPath=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String realPath=GenerateRealPath(logicPath,false);
         if(realPath.equals("")){
@@ -82,7 +77,7 @@ public class FileHandler extends BaseRequestHandler {
     private void SetFileInfo(RequestSocket requestSocket){
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String[] strDataArray = strDataContent.split("\\|",4);
-        String path = rootPath + strDataArray[0];
+        String path = MachineInfo.GetInstance().GetRootPath() + strDataArray[0];
         File dir = new File(path);
         if(dir.exists())
         {
