@@ -6,17 +6,16 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Logger;
 
 public class FileChunk {
-    private static Logger logger=Logger.getLogger(FileChunk.class.getName());
-
     private byte[] chunkData;
 
     private FileChunk nextChunk;
 
-    private CountDownLatch latch=new CountDownLatch(1);
+    private long position;
 
     public FileChunk(){
         chunkData=null;
         nextChunk=null;
+        position=0;
     }
 
     byte[] GetChunkData(){
@@ -35,17 +34,11 @@ public class FileChunk {
         this.nextChunk=chunk;
     }
 
-    void WaitForOutput(){
-        try{
-            latch.await();
-        }catch (Exception exception){
-            StringWriter stringWriter = new StringWriter();
-            exception.printStackTrace(new PrintWriter(stringWriter));
-            logger.warning(stringWriter.toString());
-        }
+    long GetPosition(){
+        return this.position;
     }
 
-    void EnableOutput(){
-        latch.countDown();
+    public void SetPosition(long position){
+        this.position=position;
     }
 }

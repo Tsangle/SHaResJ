@@ -1,7 +1,7 @@
 package com.tsangle.sharesj.Handler;
 
 import com.tsangle.sharesj.Model.FileChunk;
-import com.tsangle.sharesj.Model.FileContainer;
+import com.tsangle.sharesj.Model.FileEntity;
 import com.tsangle.sharesj.Model.MachineInfo;
 import com.tsangle.sharesj.Model.RequestSocket;
 
@@ -17,13 +17,16 @@ import java.util.logging.Logger;
 public class FileHandler extends BaseRequestHandler {
     private static Logger logger=Logger.getLogger(FileHandler.class.getName());
 
-    private final Dictionary<Integer, FileContainer> fileContainerDictionary;
+    private final Dictionary<Integer, FileEntity> fileEntityDictionary;
 
     private final Object syncObject;
 
+    private final long chunkLength;
+
     public FileHandler(){
-        fileContainerDictionary=new Hashtable<>();
+        fileEntityDictionary =new Hashtable<>();
         syncObject=new Object();
+        chunkLength=5000000;
     }
 
     static String GenerateRealPath(String logicPath, boolean isFile){
@@ -43,7 +46,7 @@ public class FileHandler extends BaseRequestHandler {
         }
     }
 
-    protected void ReturnFileSystemEntries(RequestSocket requestSocket){
+    protected void ReturnFileSystemEntries(RequestSocket requestSocket) throws Exception{
         String logicPath=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String realPath=GenerateRealPath(logicPath,false);
         if(realPath.equals("")){
@@ -74,22 +77,130 @@ public class FileHandler extends BaseRequestHandler {
         }
     }
 
-    private void SetFileInfo(RequestSocket requestSocket){
+    private void SetFileInfo(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String[] strDataArray = strDataContent.split("\\|",4);
-        String path = MachineInfo.GetInstance().GetRootPath() + strDataArray[0];
-        File dir = new File(path);
+        String filePath = MachineInfo.GetInstance().GetRootPath() + strDataArray[0];
+        String fileName = strDataArray[1];
+        long fileSize = Long.parseLong(strDataArray[2]);
+        File dir = new File(filePath);
         if(dir.exists())
         {
-            FileContainer container=new FileContainer(path+"/"+strDataArray[1],Integer.valueOf(strDataArray[2]),Integer.valueOf(strDataArray[3]));
+            FileEntity container=new FileEntity(filePath+"/"+fileName,fileSize);
             Random random=new Random();
             int key=random.nextInt(10000);
             synchronized (syncObject){
-                while (fileContainerDictionary.get(key)!=null)
+                while (fileEntityDictionary.get(key)!=null)
                     key=(key+1)%10000;
-                fileContainerDictionary.put(key,container);
+                fileEntityDictionary.put(key,container);
             }
             HandleResponseMessage(requestSocket, "text/plain",String.valueOf(key));
+        }
+        else
+        {
+            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + filePath + "]");
+        }
+    }
+
+    private void StoreFileChunk(RequestSocket requestSocket) throws Exception{
+        String[] chunkInfo=requestSocket.GetUrlArray()[2].split("&");
+        int serverCacheID = Integer.parseInt(chunkInfo[0]);
+        long startIndex = Long.parseLong(chunkInfo[1]);
+        FileEntity fileEntity;
+        fileEntity= fileEntityDictionary.get(serverCacheID);
+        if(fileEntity==null){
+            HandleErrorMessage(requestSocket, "Can't find the specified cache ID: [" + serverCacheID + "]");
+        }else{
+            for(long remainByteCount=requestSocket.GetAdditionDataLength();remainByteCount>0;){
+                if(fileEntity.IsCanceled()){
+                    break;
+                }
+                FileChunk fileChunk = new FileChunk();
+                byte[] buffer;
+                if(remainByteCount>chunkLength){
+                    buffer=requestSocket.ReadAdditionalDataChunk((int)chunkLength);
+                }else{
+                    buffer=requestSocket.ReadAdditionalDataChunk((int)remainByteCount);
+                }
+                fileChunk.SetChunkData(buffer);
+                fileChunk.SetPosition(startIndex+requestSocket.GetAdditionDataLength()-remainByteCount);
+                fileEntity.AddNewChunk(fileChunk);
+                remainByteCount-=buffer.length;
+            }
+            HandleResponseMessage(requestSocket, "text/plain","Success!");
+        }
+    }
+
+    private void CheckUploadProgress(RequestSocket requestSocket) throws Exception{
+        String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
+        String[] strDataArray = strDataContent.split("\\|",2);
+        int serverCacheID=Integer.parseInt(strDataArray[0]);
+        double currentUploadProgress=Double.parseDouble(strDataArray[1]);
+        FileEntity fileEntity=fileEntityDictionary.get(serverCacheID);
+        if(fileEntity!=null){
+            for(long fileSize=fileEntity.GetFileSize();;){
+                if(fileEntity.GetErrorMessage()!=null){
+                    HandleErrorMessage(requestSocket,fileEntity.GetErrorMessage());
+                }
+                long writtenSize=fileEntity.GetWrittenSize();
+                double fWrittenSize=(double)writtenSize;
+                double fFileSize=(double)fileSize;
+                double progress=fWrittenSize*100/fFileSize;
+                if(progress<=currentUploadProgress){
+                    Thread.sleep(100);
+                }else{
+                    String isFinished="0";
+                    if(writtenSize==fileSize){
+                        isFinished="1";
+                        fileEntity.WaitForOutputCompletion();
+                        synchronized (syncObject){
+                            fileEntityDictionary.remove(serverCacheID);
+                        }
+                    }
+                    HandleResponseMessage(requestSocket,"text/plain",progress+"|"+isFinished);
+                    break;
+                }
+            }
+        }else{
+            HandleErrorMessage(requestSocket, "Can't find the specified cache ID: [" + serverCacheID + "]");
+        }
+    }
+
+    private void CancelStoreFile(RequestSocket requestSocket) throws Exception{
+        String strServerCacheID=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
+        int serverCacheID=Integer.valueOf(strServerCacheID);
+        FileEntity fileEntity;
+        fileEntity= fileEntityDictionary.get(serverCacheID);
+        if(fileEntity!=null){
+            fileEntity.CancelOutput();
+            fileEntity.WaitForOutputCompletion();
+            synchronized (syncObject){
+                fileEntityDictionary.remove(serverCacheID);
+            }
+        }
+        HandleResponseMessage(requestSocket, "text/plain","Success!");
+    }
+
+    private void SendRequestedFile(RequestSocket requestSocket) throws Exception{
+        String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
+        String logicPath= URLDecoder.decode(strDataContent,StandardCharsets.UTF_8).split("=",2)[1];
+        String path = GenerateRealPath(logicPath,true);
+        File targetFile=new File(path);
+        if (targetFile.exists())
+        {
+            FileInputStream inputStream=new FileInputStream(path);
+            String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
+                    "Content-Length:"+targetFile.length()+System.lineSeparator()+
+                    "Content-Disposition:attachment; filename="+targetFile.getName()+System.lineSeparator()+
+                    System.lineSeparator();
+            OutputStream outputStream=requestSocket.GetOutputStream();
+            outputStream.write(responseHeader.getBytes());
+            for(byte[] chunkData=inputStream.readNBytes((int)chunkLength);chunkData.length>0;chunkData=inputStream.readNBytes((int)chunkLength)){
+                outputStream.write(chunkData);
+                outputStream.flush();
+            }
+            outputStream.close();
+            requestSocket.Close();
         }
         else
         {
@@ -97,76 +208,7 @@ public class FileHandler extends BaseRequestHandler {
         }
     }
 
-    private void StoreFileChunk(RequestSocket requestSocket){
-        String[] chunkInfo=requestSocket.GetUrlArray()[2].split("&");
-        int serverCacheID = Integer.valueOf(chunkInfo[0]);
-        int chunkOrder = Integer.valueOf(chunkInfo[1]);
-        FileContainer container;
-        synchronized (syncObject){
-            container=fileContainerDictionary.get(serverCacheID);
-        }
-        if(container==null){
-            HandleErrorMessage(requestSocket, "Can't find the specified cache ID: [" + serverCacheID + "]");
-        }else{
-            FileChunk fileChunk = new FileChunk();
-            fileChunk.SetChunkData(requestSocket.GetAdditionalData());
-            if(container.AddNewChunk(fileChunk, chunkOrder))
-            {
-                synchronized (syncObject){
-                    fileContainerDictionary.remove(serverCacheID);
-                }
-            }
-            HandleResponseMessage(requestSocket, "text/plain","Success!");
-        }
-    }
-
-    private void CancelStoreFile(RequestSocket requestSocket){
-        String strServerCacheID=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        int serverCacheID=Integer.valueOf(strServerCacheID);
-        FileContainer container;
-        synchronized (syncObject){
-            container=fileContainerDictionary.get(serverCacheID);
-        }
-        container.CancelOutput();
-        synchronized (syncObject){
-            fileContainerDictionary.remove(serverCacheID);
-        }
-        HandleResponseMessage(requestSocket, "text/plain","Success!");
-    }
-
-    private void SendRequestedFile(RequestSocket requestSocket){
-        try{
-            String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-            String logicPath= URLDecoder.decode(strDataContent,StandardCharsets.UTF_8).split("=",2)[1];
-            String path = GenerateRealPath(logicPath,true);
-            File targetFile=new File(path);
-            if (targetFile.exists())
-            {
-                FileInputStream inputStream=new FileInputStream(path);
-                int chunkLength=50000000;
-                String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
-                        "Content-Length:"+targetFile.length()+System.lineSeparator()+
-                        "Content-Disposition:attachment; filename="+targetFile.getName()+System.lineSeparator()+
-                        System.lineSeparator();
-                OutputStream outputStream=requestSocket.GetOutputStream();
-                outputStream.write(responseHeader.getBytes());
-                for(byte[] chunkData=inputStream.readNBytes(chunkLength);chunkData.length>0;chunkData=inputStream.readNBytes(chunkLength)){
-                    outputStream.write(chunkData);
-                    outputStream.flush();
-                }
-                outputStream.close();
-                requestSocket.Close();
-            }
-            else
-            {
-                HandleErrorMessage(requestSocket, "Cannot find the given path: [" + path + "]");
-            }
-        }catch (Exception exception){
-            HandleException(requestSocket,exception);
-        }
-    }
-
-    private void DeleteFile(RequestSocket requestSocket){
+    private void DeleteFile(RequestSocket requestSocket) throws Exception{
         String path = GenerateRealPath(new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8),true);
         File targetFile=new File(path);
         if (targetFile.exists())
@@ -197,6 +239,9 @@ public class FileHandler extends BaseRequestHandler {
                         case "SetFileInfo":
                             SetFileInfo(requestSocket);
                             break;
+                        case "CheckUploadProgress":
+                            CheckUploadProgress(requestSocket);
+                            break;
                         case "CancelUpload":
                             CancelStoreFile(requestSocket);
                             break;
@@ -219,7 +264,7 @@ public class FileHandler extends BaseRequestHandler {
                 }
             }
         }catch (Exception e){
-            HandleException(requestSocket,e);
+            HandleException(requestSocket,logger,e);
         }
     }
 }

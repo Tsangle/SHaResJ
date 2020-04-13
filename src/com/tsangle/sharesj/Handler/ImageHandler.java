@@ -6,8 +6,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Logger;
 
 public class ImageHandler extends BaseRequestHandler {
+    private static Logger logger=Logger.getLogger(ImageHandler.class.getName());
     @Override
     public void Handle(RequestSocket requestSocket) {
         try{
@@ -36,7 +38,7 @@ public class ImageHandler extends BaseRequestHandler {
                 HandleErrorMessage(requestSocket,"The url format doesn't meet the requirement of [Image]!");
             }
         }catch (Exception e){
-            HandleException(requestSocket,e);
+            HandleException(requestSocket,logger,e);
         }
     }
 }

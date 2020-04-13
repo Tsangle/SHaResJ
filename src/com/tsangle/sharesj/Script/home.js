@@ -8,7 +8,6 @@
     var uploadProgressDiv = $("#uploadProgressDiv");
     var uploadProgressBar = $("#uploadProgressBar");
     var uploadModal = $("#uploadModal");
-    var networkSpeedDiv = $("#networkSpeedDiv");
     var fileListTableBody = $("#FileListTableBody");
     var pathBreadCrumb = $("#PathBreadCrumb");
     var navbarCollapse = $("#navbar-collapse");
@@ -23,6 +22,8 @@
     fileModal.on('hidden.bs.modal', function () {
         var video = document.getElementById("fileModalVideo");
         if (video !== null) {
+            video.pause();
+            video.innerHTML="";
             video.load();
         }
         fileModalBody.html("");
@@ -43,44 +44,39 @@
         uploadProgressBar.css("width", "0%");
         fileInput.val("");
         fileNameInput.val("");
-        networkSpeedDiv.html("0 MB/s");
         uploadButton.attr("disabled", false);
     };
-    var notifyUploadResult = function (completedPercentage, networkSpeed) {
+    var notifyUploadResult = function (completedPercentage) {
         uploadProgressBar.css("width", completedPercentage + "%");
-        networkSpeedDiv.html(networkSpeed + " MB/s");
     };
     var FileUploader = class {
-        constructor(file, path, fileName, chunkSize, threadCount, intervalTime, notifyFunc) {
+        constructor(file, path, fileName, threadCount, notifyFunc) {
             this.file = file;
             this.path = path;
             this.fileName = fileName;
-            this.chunkSize = chunkSize;
             this.threadCount = threadCount;
-            this.intervalTime = intervalTime;
             this.errorDetected = false;
-            this.totalChunkCount = (file.size - file.size % chunkSize) / chunkSize;
-            if (this.totalChunkCount === 0)
-                this.totalChunkCount = 1;
-            if (this.totalChunkCount < this.threadCount)
-                this.threadCount = this.totalChunkCount;
-            this.uploadedChunkCount = 0;
-            this.timeBeforeUpload = 0;
+            this.chunkSize = (file.size - file.size % threadCount)/threadCount;
+            if(this.chunkSize===0){
+                this.chunkSize = 1;
+                this.threadCount = file.size;
+            }
             this.notifyFunc = notifyFunc;
             this.serverCacheID = 0;
             this.isCanceled = false;
+            this.uploadProgress = 0;
         }
 
         startUpload() {
-            var fileInfo = this.path + "|" + this.fileName + "|" + this.threadCount + "|" + this.totalChunkCount;
+            var fileInfo = this.path + "|" + this.fileName + "|" + this.file.size;
             var thisObj = this;
             $.post("/File/SetFileInfo", fileInfo, function (data) {
                 if (data.slice(0, 1) !== "#") {
                     thisObj.serverCacheID = data;
-                    thisObj.timeBeforeUpload = Date.now();
                     for (var index = 0; index < thisObj.threadCount; index++) {
-                        setTimeout(thisObj._uploadChunk, (index + 1) * thisObj.intervalTime, index, new FileReader(), thisObj);
+                        thisObj._uploadChunk(index,thisObj);
                     }
+                    thisObj._checkUploadProgress(thisObj);
                 } else {
                     resetUpload();
                     alertMessage(data, "Error", "danger");
@@ -101,62 +97,42 @@
             });
         }
 
-        _uploadChunk(index, reader, thisObj) {
+        _checkUploadProgress(thisObj){
+            $.post("/File/CheckUploadProgress", thisObj.serverCacheID + "|" + thisObj.uploadProgress, function (data) {
+                if (data.slice(0, 1) !== "#") {
+                    console.log(data);
+                    var dataArray = data.split("|");
+                    thisObj.uploadProgress = parseFloat(dataArray[0]);
+                    var result = Number(dataArray[1]);
+                    if(result===0){
+                        thisObj.notifyFunc(thisObj.uploadProgress);
+                        thisObj._checkUploadProgress(thisObj);
+                    }else{
+                        resetUpload();
+                        alertMessage("Uploading task completed!", "Info", "success");
+                        refreshFileSystemEntryList();
+                    }
+                } else {
+                    if(!thisObj.isCanceled && !thisObj.errorDetected){
+                        thisObj.errorDetected = true;
+                        alertMessage(data, "Error", "danger");
+                    }
+                }
+            });
+        }
+
+        _uploadChunk(index, thisObj) {
             var currentChunk;
-            if (thisObj.errorDetected || index >= thisObj.totalChunkCount) {
-                return;
-            } else if (index === thisObj.totalChunkCount - 1) {
+            if (index === thisObj.threadCount - 1) {
                 currentChunk = thisObj.file.slice(index * thisObj.chunkSize, thisObj.file.size);
             } else {
                 currentChunk = thisObj.file.slice(index * thisObj.chunkSize, (index + 1) * thisObj.chunkSize);
             }
-            reader.onload = function () {
-                if (!thisObj.errorDetected) {
-                    var chunkContent = this.result;
-                    var httpRequest = new XMLHttpRequest();
-                    httpRequest.overrideMimeType("text/xml");
-                    httpRequest.onreadystatechange = function () {
-                        thisObj._uploadCallback(index, reader, httpRequest, thisObj);
-                    };
-                    httpRequest.open("POST", "/File/UploadFileChunk/"+thisObj.serverCacheID+"&"+index);
-                    httpRequest.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
-                    httpRequest.send(chunkContent);
-                }
-            };
-            reader.readAsArrayBuffer(currentChunk);
-        }
-
-        _uploadCallback(index, reader, httpRequest, thisObj) {
-            if (!thisObj.errorDetected && httpRequest.readyState === 4 && httpRequest.status === 200) {
-                var responseText = httpRequest.responseText;
-                if (responseText.slice(0,1) === "#") {
-                    thisObj.errorDetected = true;
-                    if(!thisObj.isCanceled){
-                        alertMessage(responseText, "Error", "danger");
-                        resetUpload();
-                    }
-                } else {
-                    thisObj.uploadedChunkCount++;
-                    var completedPercentage = thisObj.uploadedChunkCount / thisObj.totalChunkCount * 100;
-                    var timeAfterUpload = Date.now();
-                    var networkSpeed;
-                    if (thisObj.uploadedChunkCount === thisObj.totalChunkCount) {
-                        networkSpeed = Math.round(thisObj.file.size / (timeAfterUpload - thisObj.timeBeforeUpload) * 1000 / 1048576);
-                    } else {
-                        networkSpeed = Math.round(thisObj.uploadedChunkCount * thisObj.chunkSize / (timeAfterUpload - thisObj.timeBeforeUpload) * 1000 / 1048576);
-                    }
-                    thisObj.notifyFunc(completedPercentage, networkSpeed);
-                    if (thisObj.uploadedChunkCount === thisObj.totalChunkCount) {
-                        alertMessage(responseText, "Info", "success");
-                        resetUpload();
-                        navbarCollapse.collapse("hide");
-                        refreshFileSystemEntryList();
-                    } else {
-                        reader.abort();
-                        thisObj._uploadChunk(index + thisObj.threadCount, reader, thisObj);
-                    }
-                }
-            }
+            var httpRequest = new XMLHttpRequest();
+            httpRequest.overrideMimeType("text/xml");
+            httpRequest.open("POST", "/File/UploadFileChunk/"+thisObj.serverCacheID+"&"+index * thisObj.chunkSize);
+            httpRequest.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+            httpRequest.send(currentChunk);
         }
     };
     selectFileButton.click(function () {
@@ -168,12 +144,9 @@
             uploadProgressBar.css("width", "0%");
             uploadProgressDiv.show();
             uploadButton.attr("disabled", true);
-            networkSpeedDiv.html("0 MB/s");
             var file = fileInput[0].files[0];
-            var chunkSize = 5000000;
-            var uploadThreadCount = 6;
-            var intervalTime = 50;
-            fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), chunkSize, uploadThreadCount, intervalTime, notifyUploadResult);
+            var uploadThreadCount = 5;
+            fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), uploadThreadCount, notifyUploadResult);
             fileUploader.startUpload();
         } else {
             alertMessage("Please select a file!", "Warning", "warning");
@@ -312,7 +285,7 @@
         var fileNameArray = fileName.split(".");
         var extendName = fileNameArray[fileNameArray.length - 1];
         if (extendName === "mp4" || extendName === "MP4") {
-            fileModalBody.html("<video id='fileModalVideo' width='100%' height='auto'controls>" +
+            fileModalBody.html("<video id='fileModalVideo' width='100%' height='auto'controls preload='none'>" +
                 "<source src='/Video/PlayVideo/" + sessionStorage.getItem("path") + "/" + fileName +
                 "' type='video/mp4'></video>" +
                 "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");

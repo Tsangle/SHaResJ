@@ -5,7 +5,7 @@ import com.tsangle.sharesj.Model.RequestSocket;
 
 public class LocalFileHandler extends FileHandler {
     @Override
-    protected void ReturnFileSystemEntries(RequestSocket requestSocket) {
+    protected void ReturnFileSystemEntries(RequestSocket requestSocket) throws Exception {
         super.ReturnFileSystemEntries(requestSocket);
     }
 }

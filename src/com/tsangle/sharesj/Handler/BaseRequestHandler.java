@@ -14,7 +14,7 @@ public abstract class BaseRequestHandler {
             byte[] messageData=message.getBytes();
             HandleResponseData(requestSocket,contentType,messageData);
         }catch (Exception e){
-            HandleException(requestSocket,e);
+            HandleException(requestSocket,logger,e);
         }
     }
 
@@ -38,14 +38,14 @@ public abstract class BaseRequestHandler {
         }catch (SocketException e){
             logger.info("Abort writing data: "+e.getMessage()+System.lineSeparator());
         }catch (Exception e){
-            HandleException(requestSocket,e);
+            HandleException(requestSocket,logger,e);
         }
     }
 
-    void HandleException(RequestSocket requestSocket, Exception exception){
+    void HandleException(RequestSocket requestSocket,Logger exceptionLogger, Exception exception){
         StringWriter stringWriter = new StringWriter();
         exception.printStackTrace(new PrintWriter(stringWriter));
-        logger.warning(stringWriter.toString());
+        exceptionLogger.warning(stringWriter.toString());
         requestSocket.SetErrorString(exception.getMessage());
     }
 

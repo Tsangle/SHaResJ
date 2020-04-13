@@ -15,15 +15,17 @@ public class RequestSocket{
     private String errorString;
     private String url;
     private String range;
-    private byte[] additionalData;
+    private long additionalDataLength;
     private StringBuilder additionResponseHeaderBuilder;
     private String statusCode;
+    private DataInputStream requestInputStream;
 
     public RequestSocket(Socket acceptSocket){
         this.acceptSocket=acceptSocket;
         this.errorString="";
-        this.additionalData=new byte[0];
         this.additionResponseHeaderBuilder=new StringBuilder();
+        this.additionalDataLength=0;
+        this.requestInputStream=null;
         this.statusCode="200";
         try{
             DataInputStream inputStream=new DataInputStream(acceptSocket.getInputStream());
@@ -61,8 +63,7 @@ public class RequestSocket{
                                 host=requestArray[1].split(":",2);
                                 break;
                             case "Content-Length:":
-                                int contentLength=Integer.parseInt(requestArray[1]);
-                                additionalData=new byte[contentLength];
+                                additionalDataLength=Long.parseLong(requestArray[1]);
                             case "Range:":
                                 range=requestArray[1];
                                 break;
@@ -77,8 +78,8 @@ public class RequestSocket{
             }
             String requestInfo=requestInfoBuilder.toString();
             logger.info(requestInfo);
-            if(this.additionalData.length>0){
-                inputStream.readFully(this.additionalData);
+            if(this.additionalDataLength>0){
+                requestInputStream=inputStream;
             }
         }catch (Exception e){
             StringWriter stringWriter = new StringWriter();
@@ -103,8 +104,28 @@ public class RequestSocket{
         return url;
     }
 
-    public byte[] GetAdditionalData(){
-        return additionalData;
+    public byte[] GetAdditionalData() throws Exception{
+        byte[] buffer=new byte[0];
+        if(additionalDataLength>0){
+            buffer=new byte[(int)additionalDataLength];
+            requestInputStream.readFully(buffer);
+        }
+        return buffer;
+    }
+
+    public byte[] ReadAdditionalDataChunk(int length) throws Exception{
+        byte[] buffer;
+        if(additionalDataLength>0){
+            buffer=new byte[length];
+            requestInputStream.readFully(buffer);
+        }else{
+            buffer=new byte[0];
+        }
+        return buffer;
+    }
+
+    public long GetAdditionDataLength(){
+        return additionalDataLength;
     }
 
     public String GetRange(){

@@ -85,7 +85,7 @@ public class VideoHandler extends BaseRequestHandler{
                 HandleErrorMessage(requestSocket,"The url format doesn't meet the requirement of [Video]!");
             }
         }catch (Exception e){
-            HandleException(requestSocket,e);
+            HandleException(requestSocket,logger,e);
         }
     }
 }

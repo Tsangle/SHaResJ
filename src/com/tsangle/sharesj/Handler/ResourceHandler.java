@@ -39,11 +39,12 @@ public class ResourceHandler extends BaseRequestHandler {
                     }
                     HandleResponseData(requestSocket,contentType,outputStream.toByteArray());
                 }
+                System.gc();
             }else{
                 HandleErrorMessage(requestSocket,"The url format doesn't meet the requirement of [Resource]!");
             }
         }catch (Exception e){
-            HandleException(requestSocket,e);
+            HandleException(requestSocket,logger,e);
         }
     }
 }
