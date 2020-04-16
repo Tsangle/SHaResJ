@@ -102,7 +102,7 @@ public class FileHandler extends BaseRequestHandler {
         }
     }
 
-    private void StoreFileChunk(RequestSocket requestSocket) throws Exception{
+    private void StoreFileChunk(RequestSocket requestSocket){
         String[] chunkInfo=requestSocket.GetUrlArray()[2].split("&");
         int serverCacheID = Integer.parseInt(chunkInfo[0]);
         long startIndex = Long.parseLong(chunkInfo[1]);
@@ -111,21 +111,26 @@ public class FileHandler extends BaseRequestHandler {
         if(fileEntity==null){
             HandleErrorMessage(requestSocket, "Can't find the specified cache ID: [" + serverCacheID + "]");
         }else{
-            for(long remainByteCount=requestSocket.GetAdditionDataLength();remainByteCount>0;){
-                if(fileEntity.IsCanceled()){
-                    break;
+            try{
+                for(long remainByteCount=requestSocket.GetAdditionDataLength();remainByteCount>0;){
+                    if(fileEntity.IsCanceled()){
+                        break;
+                    }
+                    FileChunk fileChunk = new FileChunk();
+                    byte[] buffer;
+                    if(remainByteCount>chunkLength){
+                        buffer=requestSocket.ReadAdditionalDataChunk((int)chunkLength);
+                    }else{
+                        buffer=requestSocket.ReadAdditionalDataChunk((int)remainByteCount);
+                    }
+                    fileChunk.SetChunkData(buffer);
+                    fileChunk.SetPosition(startIndex+requestSocket.GetAdditionDataLength()-remainByteCount);
+                    fileEntity.AddNewChunk(fileChunk);
+                    remainByteCount-=buffer.length;
                 }
-                FileChunk fileChunk = new FileChunk();
-                byte[] buffer;
-                if(remainByteCount>chunkLength){
-                    buffer=requestSocket.ReadAdditionalDataChunk((int)chunkLength);
-                }else{
-                    buffer=requestSocket.ReadAdditionalDataChunk((int)remainByteCount);
-                }
-                fileChunk.SetChunkData(buffer);
-                fileChunk.SetPosition(startIndex+requestSocket.GetAdditionDataLength()-remainByteCount);
-                fileEntity.AddNewChunk(fileChunk);
-                remainByteCount-=buffer.length;
+            }catch (Exception e){
+                fileEntity.CancelOutput();
+                fileEntity.SetErrorMessage(e.getMessage());
             }
             HandleResponseMessage(requestSocket, "text/plain","Success!");
         }
@@ -140,7 +145,12 @@ public class FileHandler extends BaseRequestHandler {
         if(fileEntity!=null){
             for(long fileSize=fileEntity.GetFileSize();;){
                 if(fileEntity.GetErrorMessage()!=null){
+                    synchronized (syncObject){
+                        fileEntityDictionary.remove(serverCacheID);
+                    }
+                    fileEntity.WaitForOutputCompletion();
                     HandleErrorMessage(requestSocket,fileEntity.GetErrorMessage());
+                    break;
                 }
                 long writtenSize=fileEntity.GetWrittenSize();
                 double fWrittenSize=(double)writtenSize;
