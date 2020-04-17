@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
-import java.util.zip.GZIPOutputStream;
 
 public class VideoHandler extends BaseRequestHandler{
     private static Logger logger=Logger.getLogger(VideoHandler.class.getName());
@@ -20,7 +19,7 @@ public class VideoHandler extends BaseRequestHandler{
             if(requestSocket.CheckUrlArrayFormat(3)){
                 switch (requestSocket.GetUrlArray()[1]){
                     case "PlayVideo":
-                        String videoPath = FileHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetUrlArray()[2]),true);
+                        String videoPath = FileHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetUrlArray()[2],"UTF-8"),true);
                         File videoFile=new File(videoPath);
                         if (videoFile.exists())
                         {
