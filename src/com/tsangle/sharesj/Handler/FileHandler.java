@@ -138,9 +138,10 @@ public class FileHandler extends BaseRequestHandler {
 
     private void CheckUploadProgress(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        String[] strDataArray = strDataContent.split("\\|",2);
+        String[] strDataArray = strDataContent.split("\\|",3);
         int serverCacheID=Integer.parseInt(strDataArray[0]);
         double currentUploadProgress=Double.parseDouble(strDataArray[1]);
+        long lastTimeStamp=Long.parseLong(strDataArray[2]);
         FileEntity fileEntity=fileEntityDictionary.get(serverCacheID);
         if(fileEntity!=null){
             for(long fileSize=fileEntity.GetFileSize();;){
@@ -152,22 +153,43 @@ public class FileHandler extends BaseRequestHandler {
                     HandleErrorMessage(requestSocket,fileEntity.GetErrorMessage());
                     break;
                 }
-                long writtenSize=fileEntity.GetWrittenSize();
-                double fWrittenSize=(double)writtenSize;
+                long readSize=fileEntity.GetReadSize();
+                double fReadSize=(double)readSize;
                 double fFileSize=(double)fileSize;
-                double progress=fWrittenSize*100/fFileSize;
+                double progress=fReadSize*100/fFileSize;
                 if(progress<=currentUploadProgress){
                     Thread.sleep(100);
                 }else{
+                    long currentTime=new Date().getTime();
+                    long currentTimeStamp=currentTime-fileEntity.GetCreatedTime();
+                    double timeGap=(double) (currentTimeStamp-lastTimeStamp);
+                    double speed=0;
+                    String speedUnit="B/s";
+                    if(timeGap>1000){
+                        double newlyAddedSize=(double)fileEntity.GetNewlyReadSize();
+                        fileEntity.ResetNewlyReadSize();
+                        speed=newlyAddedSize/timeGap*1000;
+                        String[] speedUnitArray={"KB/s","MB/s","GB/s"};
+                        for(int counter=0;counter<3;counter++){
+                            if(speed/1024>1){
+                                speed=speed/1024;
+                                speedUnit=speedUnitArray[counter];
+                            }else{
+                                break;
+                            }
+                        }
+                    }else{
+                        currentTimeStamp=lastTimeStamp;
+                    }
                     String isFinished="0";
-                    if(writtenSize==fileSize){
+                    if(readSize==fileSize){
                         isFinished="1";
                         fileEntity.WaitForOutputCompletion();
                         synchronized (syncObject){
                             fileEntityDictionary.remove(serverCacheID);
                         }
                     }
-                    HandleResponseMessage(requestSocket,"text/plain",progress+"|"+isFinished);
+                    HandleResponseMessage(requestSocket,"text/plain",progress+"|"+currentTimeStamp+"|"+(int)speed+" "+speedUnit+"|"+isFinished);
                     break;
                 }
             }

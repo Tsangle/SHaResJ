@@ -57,6 +57,12 @@ public class RequestSocket{
                                 }else{
                                     urlArray=requestArray[1].substring(1).split("/",3);
                                     url=requestArray[1];
+                                    if(urlArray[0].equals("Resource")&&urlArray[1].equals("Script")){
+                                        int index=urlArray[2].indexOf("-ver");
+                                        if(index!=-1){
+                                            urlArray[2]=urlArray[2].substring(0,index);
+                                        }
+                                    }
                                 }
                                 break;
                             case "Host:":

@@ -3,6 +3,7 @@ package com.tsangle.sharesj.Model;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.StringWriter;
+import java.util.Date;
 import java.util.logging.Logger;
 
 public class FileEntity {
@@ -26,6 +27,12 @@ public class FileEntity {
 
     private FileChunk currentChunk;
 
+    private long createdTime;
+
+    private long readSize;
+
+    private long newlyReadSize;
+
     public FileEntity(String filePath, long fileSize){
         this.filePath=filePath;
         this.fileSize=fileSize;
@@ -42,6 +49,9 @@ public class FileEntity {
             }
         });
         outputThread.start();
+        createdTime=new Date().getTime();
+        newlyReadSize =0;
+        readSize=0;
     }
 
     public void AddNewChunk(FileChunk newChunk){
@@ -49,6 +59,8 @@ public class FileEntity {
         {
             headChunk.SetNextChunk(newChunk);
             headChunk=newChunk;
+            readSize +=newChunk.GetChunkData().length;
+            newlyReadSize +=newChunk.GetChunkData().length;
         }
     }
 
@@ -68,8 +80,22 @@ public class FileEntity {
         return fileSize;
     }
 
-    public long GetWrittenSize(){
-        return writtenSize;
+    public long GetReadSize(){
+        return readSize;
+    }
+
+    public long GetNewlyReadSize(){
+        return newlyReadSize;
+    }
+
+    public void ResetNewlyReadSize(){
+        synchronized (syncChunk){
+            newlyReadSize =0;
+        }
+    }
+
+    public long GetCreatedTime(){
+        return createdTime;
     }
 
     public boolean IsCanceled(){

@@ -8,6 +8,7 @@
     var uploadProgressDiv = $("#uploadProgressDiv");
     var uploadProgressBar = $("#uploadProgressBar");
     var uploadModal = $("#uploadModal");
+    var networkSpeedDiv = $("#networkSpeedDiv");
     var fileListTableBody = $("#FileListTableBody");
     var pathBreadCrumb = $("#PathBreadCrumb");
     var navbarCollapse = $("#navbar-collapse");
@@ -44,10 +45,12 @@
         uploadProgressBar.css("width", "0%");
         fileInput.val("");
         fileNameInput.val("");
+        networkSpeedDiv.html("0 B/s");
         uploadButton.attr("disabled", false);
     };
-    var notifyUploadResult = function (completedPercentage) {
+    var notifyUploadResult = function (completedPercentage, networkSpeed) {
         uploadProgressBar.css("width", completedPercentage + "%");
+        networkSpeedDiv.html(networkSpeed);
     };
     var FileUploader = class {
         constructor(file, path, fileName, threadCount, notifyFunc) {
@@ -76,7 +79,7 @@
                     for (var index = 0; index < thisObj.threadCount; index++) {
                         thisObj._uploadChunk(index,thisObj);
                     }
-                    thisObj._checkUploadProgress(thisObj);
+                    thisObj._checkUploadProgress(thisObj, 0, "0 B/s");
                 } else {
                     resetUpload();
                     alertMessage(data, "Error", "danger");
@@ -97,16 +100,22 @@
             });
         }
 
-        _checkUploadProgress(thisObj){
-            $.post("/File/CheckUploadProgress", thisObj.serverCacheID + "|" + thisObj.uploadProgress, function (data) {
+        _checkUploadProgress(thisObj, time, currentSpeed){
+            $.post("/File/CheckUploadProgress", thisObj.serverCacheID + "|" + thisObj.uploadProgress + "|" + time, function (data) {
                 if (data.slice(0, 1) !== "#") {
-                    console.log(data);
                     var dataArray = data.split("|");
                     thisObj.uploadProgress = parseFloat(dataArray[0]);
-                    var result = Number(dataArray[1]);
-                    if(result===0){
-                        thisObj.notifyFunc(thisObj.uploadProgress);
-                        thisObj._checkUploadProgress(thisObj);
+                    var timeStamp = Number(dataArray[1]);
+                    var speed = dataArray[2];
+                    var status = Number(dataArray[3]);
+                    if(status===0){
+                        if(time===timeStamp){
+                            thisObj.notifyFunc(thisObj.uploadProgress, currentSpeed);
+                            thisObj._checkUploadProgress(thisObj, timeStamp, currentSpeed);
+                        }else{
+                            thisObj.notifyFunc(thisObj.uploadProgress, speed);
+                            thisObj._checkUploadProgress(thisObj, timeStamp, speed);
+                        }
                     }else{
                         resetUpload();
                         alertMessage("Uploading task completed!", "Info", "success");
