@@ -42,8 +42,10 @@ body {
 }
 
 .breadcrumb{
+    padding-top: 5px;
+    padding-bottom: 5px;
     margin-bottom:10px;
-    margin-top:10px;
+    margin-top:15px;
 }
 
 .alertHeader{
