@@ -19,6 +19,8 @@
     var deleteButton = $("#deleteButton");
     var downloadButton = $("#downloadButton");
     var fileListSpinner = $("#fileListSpinner");
+    var deviceSizeDetector = $("#deviceSizeDetector")
+    var navCollapseButton = $("#navCollapseButton")
     var fileUploader;
 
     fileModal.on('hidden.bs.modal', function () {
@@ -248,7 +250,7 @@
                     var entryInfo = fileSystemEntries[index].split("*");
                     var dateTime = entryInfo[1].split(" ");
                     if (entryInfo[2] === "") {
-                        $("<tr><td><i class='folderIcon fa fa-folder-open'></i><a class='entryTableFolderName'>" +
+                        $("<tr><td><i class='folderIcon fa fa-folder-open' aria-hidden='true'></i><a class='entryTableFolderName'>" +
                             entryInfo[0] + "</a></td><td><div data-toggle='tooltip' data-placement='top' title='" +
                             dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
@@ -269,7 +271,7 @@
                                 }
                             }
                         }
-                        $("<tr><td class='tableFileName'><i class='fileIcon fa fa fa-file-o'></i>" +
+                        $("<tr><td class='tableFileName'><i class='fileIcon fa fa fa-file-o' aria-hidden='true'></i>" +
                             entryInfo[0] + "</td><td><div data-toggle='tooltip' data-placement='top' title='" +
                             dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
@@ -316,11 +318,26 @@
                 "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");
         }else {
             fileModalBody.html("<div class='fileInfo' style='font-size:80px;color:rgb(190, 190, 190);'>" +
-                "<span class='fa fa-download'></span></div>" +
+                "<span class='fa fa-download' aria-hidden='true'></span></div>" +
                 "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");
         }
         fileModal.modal("show");
     };
+
+    isNavCollapseButtonVisible = navCollapseButton.is(":visible")
+
+    $(window).on("resize", function(){
+        if (navCollapseButton.is(":hidden") && isNavCollapseButtonVisible){
+            navbarCollapse.removeClass("show");
+        }
+        isNavCollapseButtonVisible = navCollapseButton.is(":visible")
+    })
+
+    $("div.navItemFont").click(function(){
+        if (navCollapseButton.is(":visible")){
+            navbarCollapse.collapse('hide');
+        }
+    });
 
     var currentPath = sessionStorage.getItem("path");
     if (currentPath !== null && currentPath !== undefined) {
