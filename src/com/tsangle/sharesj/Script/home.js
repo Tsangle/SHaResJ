@@ -19,8 +19,9 @@
     var deleteButton = $("#deleteButton");
     var downloadButton = $("#downloadButton");
     var fileListSpinner = $("#fileListSpinner");
-    var deviceSizeDetector = $("#deviceSizeDetector")
-    var navCollapseButton = $("#navCollapseButton")
+    var deviceSizeDetector = $("#deviceSizeDetector");
+    var navCollapseButton = $("#navCollapseButton");
+    var uploadSpinner = $("#uploadSpinner");
     var fileUploader;
 
     fileModal.on('hidden.bs.modal', function () {
@@ -41,16 +42,31 @@
     alertModal.on('hidden.bs.modal', function () {
         alertModalBody.html("");
     });
-    var resetUpload = function () {
+    var initUploadModal = function () {
+        selectFileDiv.hide();
+        uploadSpinner.hide();
+        uploadProgressBar.css("width", "0%");
+        uploadProgressDiv.show();
+        uploadButton.attr("disabled", true);
+        uploadButton.text("Uploading...")
+    }
+    var showSpinnerInUploadModal = function () {
+        uploadButton.text("Waiting...")
+        uploadProgressDiv.hide();
+        uploadSpinner.show();
+    };
+    var resetUploadModal = function () {
         fileUploader = undefined;
         uploadModal.modal('hide');
         selectFileDiv.show();
+        uploadSpinner.hide();
         uploadProgressDiv.hide();
         uploadProgressBar.css("width", "0%");
         fileInput.val("");
         fileNameInput.val("");
         networkSpeedDiv.html("0 B/s");
         uploadButton.attr("disabled", false);
+        uploadButton.text("Upload")
     };
     var notifyUploadResult = function (completedPercentage, networkSpeed) {
         uploadProgressBar.css("width", completedPercentage + "%");
@@ -85,7 +101,7 @@
                     }
                     thisObj._checkUploadProgress(thisObj, 0, "0 B/s");
                 } else {
-                    resetUpload();
+                    resetUploadModal();
                     alertMessage(data, "Error", "danger");
                 }
             });
@@ -95,7 +111,7 @@
             var thisObj = this;
             thisObj.isCanceled = true;
             $.post("/File/CancelUpload", thisObj.serverCacheID, function (data) {
-                resetUpload();
+                resetUploadModal();
                 if (data.slice(0, 1) !== "#") {
                     alertMessage("Uploading task canceled!", "Info", "success");
                 } else {
@@ -121,10 +137,24 @@
                             thisObj._checkUploadProgress(thisObj, timeStamp, speed);
                         }
                     }else{
-                        resetUpload();
-                        alertMessage("Uploading task completed!", "Info", "success");
-                        refreshFileSystemEntryList();
+                        thisObj._waitForUploadCompletion(thisObj);
                     }
+                } else {
+                    if(!thisObj.isCanceled && !thisObj.errorDetected){
+                        thisObj.errorDetected = true;
+                        alertMessage(data, "Error", "danger");
+                    }
+                }
+            });
+        }
+
+        _waitForUploadCompletion(thisObj){
+            showSpinnerInUploadModal();
+            $.post("/File/WaitForUploadCompletion", thisObj.serverCacheID, function (data) {
+                if (data.slice(0, 1) !== "#") {
+                    resetUploadModal();
+                    alertMessage("Uploading task completed!", "Info", "success");
+                    refreshFileSystemEntryList();
                 } else {
                     if(!thisObj.isCanceled && !thisObj.errorDetected){
                         thisObj.errorDetected = true;
@@ -153,10 +183,7 @@
     });
     uploadButton.click(function () {
         if (fileInput[0].files.length > 0) {
-            selectFileDiv.hide();
-            uploadProgressBar.css("width", "0%");
-            uploadProgressDiv.show();
-            uploadButton.attr("disabled", true);
+            initUploadModal()
             var file = fileInput[0].files[0];
             var uploadThreadCount = 5;
             fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), uploadThreadCount, notifyUploadResult);
@@ -169,7 +196,7 @@
         if (fileUploader !== undefined) {
             fileUploader.cancelUpload();
         } else {
-            resetUpload();
+            resetUploadModal();
         }
     });
     deleteButton.click(function () {
@@ -324,18 +351,11 @@
         fileModal.modal("show");
     };
 
-    isNavCollapseButtonVisible = navCollapseButton.is(":visible")
-
-    $(window).on("resize", function(){
-        if (navCollapseButton.is(":hidden") && isNavCollapseButtonVisible){
-            navbarCollapse.removeClass("show");
-        }
-        isNavCollapseButtonVisible = navCollapseButton.is(":visible")
-    })
-
     $("div.navItemFont").click(function(){
         if (navCollapseButton.is(":visible")){
             navbarCollapse.collapse('hide');
+        } else {
+            navbarCollapse.removeClass("show");
         }
     });
 

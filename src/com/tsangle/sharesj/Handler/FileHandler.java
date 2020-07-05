@@ -184,10 +184,6 @@ public class FileHandler extends BaseRequestHandler {
                     String isFinished="0";
                     if(readSize==fileSize){
                         isFinished="1";
-                        fileEntity.WaitForOutputCompletion();
-                        synchronized (syncObject){
-                            fileEntityDictionary.remove(serverCacheID);
-                        }
                     }
                     HandleResponseMessage(requestSocket,"text/plain",progress+"|"+currentTimeStamp+"|"+(int)speed+" "+speedUnit+"|"+isFinished);
                     break;
@@ -198,9 +194,22 @@ public class FileHandler extends BaseRequestHandler {
         }
     }
 
+    private void WaitForUploadCompletion(RequestSocket requestSocket) throws Exception{
+        String strServerCacheID=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
+        int serverCacheID=Integer.parseInt(strServerCacheID);
+        FileEntity fileEntity=fileEntityDictionary.get(serverCacheID);
+        if(fileEntity!=null){
+            fileEntity.WaitForOutputCompletion();
+            synchronized (syncObject){
+                fileEntityDictionary.remove(serverCacheID);
+            }
+        }
+        HandleResponseMessage(requestSocket, "text/plain","Success!");
+    }
+
     private void CancelStoreFile(RequestSocket requestSocket) throws Exception{
         String strServerCacheID=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        int serverCacheID=Integer.valueOf(strServerCacheID);
+        int serverCacheID=Integer.parseInt(strServerCacheID);
         FileEntity fileEntity;
         fileEntity= fileEntityDictionary.get(serverCacheID);
         if(fileEntity!=null){
@@ -273,6 +282,9 @@ public class FileHandler extends BaseRequestHandler {
                             break;
                         case "CheckUploadProgress":
                             CheckUploadProgress(requestSocket);
+                            break;
+                        case "WaitForUploadCompletion":
+                            WaitForUploadCompletion(requestSocket);
                             break;
                         case "CancelUpload":
                             CancelStoreFile(requestSocket);
