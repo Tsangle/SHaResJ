@@ -277,7 +277,7 @@
                     var entryInfo = fileSystemEntries[index].split("*");
                     var dateTime = entryInfo[1].split(" ");
                     if (entryInfo[2] === "") {
-                        $("<tr><td><i class='folderIcon fa fa-folder-open' aria-hidden='true'></i><a class='entryTableFolderName'>" +
+                        $("<tr><td><i class='folderIcon fa fa-folder-open mr-2' aria-hidden='true'></i><a class='entryTableFolderName'>" +
                             entryInfo[0] + "</a></td><td><div data-toggle='tooltip' data-placement='top' title='" +
                             dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
@@ -298,7 +298,7 @@
                                 }
                             }
                         }
-                        $("<tr><td class='tableFileName'><i class='fileIcon fa fa fa-file-o' aria-hidden='true'></i>" +
+                        $("<tr><td class='tableFileName'><i class='fileIcon fa fa fa-file-o mr-2' aria-hidden='true'></i>" +
                             entryInfo[0] + "</td><td><div data-toggle='tooltip' data-placement='top' title='" +
                             dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
