@@ -203,7 +203,7 @@
             resetUploadModal();
         }
     });
-    deleteButton.click(function () {
+    deleteButton.click(function (event) {
         if (deleteButton.attr("aria-describedby")!==undefined){
             deleteButton.tooltip('hide');
             var fullPath = sessionStorage.getItem("path") + "/" + $("#selectedFileName").text();
@@ -221,6 +221,10 @@
         }else{
             deleteButton.tooltip('show');
         }
+        event.stopPropagation();
+    });
+    fileModal.click(function(){
+        deleteButton.tooltip('hide');
     });
     downloadButton.click(function () {
         var fullPath = sessionStorage.getItem("path") + "/" + $("#selectedFileName").text();
@@ -345,15 +349,13 @@
         getFileSystemEntry(sessionStorage.getItem("path"));
     };
     var showFileInfo = function (fileName) {
+        previousFileButton.css("opacity", 1);
+        nextFileButton.css("opacity", 1);
         if (currentFileIndex===0){
             previousFileButton.css("opacity", 0);
-            nextFileButton.css("opacity", 1);
-        }else if(currentFileIndex===filenameList.length-1){
-            previousFileButton.css("opacity", 1);
+        }
+        if(currentFileIndex===filenameList.length-1){
             nextFileButton.css("opacity", 0);
-        }else{
-            previousFileButton.css("opacity", 1);
-            nextFileButton.css("opacity", 1);
         }
         var fileNameArray = fileName.split(".");
         var extendName = fileNameArray[fileNameArray.length - 1];
