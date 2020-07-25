@@ -28,7 +28,7 @@ body {
 
 .alertDialog{
     max-width:19rem;
-    margin:5rem auto;
+    margin:3rem auto;
 }
 
 .folderIcon {
@@ -63,4 +63,23 @@ body {
 
 .fileInfo{
     text-align:center;
+}
+
+.bodyMask{
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 500;
+    width: 100vw;
+    height: 100vh;
+}
+
+.center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
 }

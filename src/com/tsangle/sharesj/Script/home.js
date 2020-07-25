@@ -11,7 +11,7 @@
     var networkSpeedDiv = $("#networkSpeedDiv");
     var fileListTableBody = $("#FileListTableBody");
     var pathBreadCrumb = $("#PathBreadCrumb");
-    var navbarCollapse = $("#navbar-collapse");
+    var navbarCollapse = $("#navbarCollapse");
     var alertModal = $("#alertModal");
     var alertModalBody = $("#alertModalBody");
     var fileModal = $("#fileModal");
@@ -21,10 +21,14 @@
     var fileListSpinner = $("#fileListSpinner");
     var deviceSizeDetector = $("#deviceSizeDetector");
     var navCollapseButton = $("#navCollapseButton");
-    var uploadSpinner = $("#uploadSpinner");
+    var navbarCollapseMask = $("#navbarCollapseMask");
+    var previousFileButton = $("#previousFileButton");
+    var nextFileButton = $("#nextFileButton");
     var fileUploader;
+    var filenameList;
+    var currentFileIndex;
 
-    fileModal.on('hidden.bs.modal', function () {
+    var resetFileModalBody = function(){
         var video = document.getElementById("fileModalVideo");
         if (video !== null) {
             video.pause();
@@ -32,6 +36,10 @@
             video.load();
         }
         fileModalBody.html("");
+    };
+
+    fileModal.on('hidden.bs.modal', function () {
+        resetFileModalBody();
     });
     var alertMessage = function (message, type = "Info", style = "info") {
         $("<div class='alert alert-" + style + " alert-dismissable fade show' role='alert'>" +
@@ -44,22 +52,20 @@
     });
     var initUploadModal = function () {
         selectFileDiv.hide();
-        uploadSpinner.hide();
         uploadProgressBar.css("width", "0%");
+        networkSpeedDiv.html("0 B/s");
         uploadProgressDiv.show();
         uploadButton.attr("disabled", true);
         uploadButton.text("Uploading...")
     }
     var showSpinnerInUploadModal = function () {
         uploadButton.text("Waiting...")
-        uploadProgressDiv.hide();
-        uploadSpinner.show();
+        networkSpeedDiv.html("<div class='spinner-border text-secondary spinner-border-sm' role='status'></div>");
     };
     var resetUploadModal = function () {
         fileUploader = undefined;
         uploadModal.modal('hide');
         selectFileDiv.show();
-        uploadSpinner.hide();
         uploadProgressDiv.hide();
         uploadProgressBar.css("width", "0%");
         fileInput.val("");
@@ -120,22 +126,20 @@
             });
         }
 
-        _checkUploadProgress(thisObj, time, currentSpeed){
-            $.post("/File/CheckUploadProgress", thisObj.serverCacheID + "|" + thisObj.uploadProgress + "|" + time, function (data) {
+        _checkUploadProgress(thisObj, lastTimeStamp, lastSpeed){
+            $.post("/File/CheckUploadProgress", thisObj.serverCacheID + "|" + thisObj.uploadProgress + "|" + lastTimeStamp, function (data) {
                 if (data.slice(0, 1) !== "#") {
                     var dataArray = data.split("|");
                     thisObj.uploadProgress = parseFloat(dataArray[0]);
                     var timeStamp = Number(dataArray[1]);
                     var speed = dataArray[2];
                     var status = Number(dataArray[3]);
+                    if(lastTimeStamp===timeStamp) {
+                        speed = lastSpeed;
+                    }
+                    thisObj.notifyFunc(thisObj.uploadProgress, speed);
                     if(status===0){
-                        if(time===timeStamp){
-                            thisObj.notifyFunc(thisObj.uploadProgress, currentSpeed);
-                            thisObj._checkUploadProgress(thisObj, timeStamp, currentSpeed);
-                        }else{
-                            thisObj.notifyFunc(thisObj.uploadProgress, speed);
-                            thisObj._checkUploadProgress(thisObj, timeStamp, speed);
-                        }
+                        thisObj._checkUploadProgress(thisObj, timeStamp, speed);
                     }else{
                         thisObj._waitForUploadCompletion(thisObj);
                     }
@@ -273,11 +277,12 @@
                 });
                 fileListSpinner.hide();
                 var fileSystemEntries = data.split("|");
+                filenameList = [];
                 for (var index = 0; index < fileSystemEntries.length - 1; index++) {
                     var entryInfo = fileSystemEntries[index].split("*");
                     var dateTime = entryInfo[1].split(" ");
                     if (entryInfo[2] === "") {
-                        $("<tr><td><i class='folderIcon fa fa-folder-open mr-2' aria-hidden='true'></i><a class='entryTableFolderName'>" +
+                        $("<tr><td><i class='folderIcon fas fa-folder-open mr-2' aria-hidden='true'></i><a class='entryTableFolderName'>" +
                             entryInfo[0] + "</a></td><td><div data-toggle='tooltip' data-placement='top' title='" +
                             dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
@@ -298,13 +303,15 @@
                                 }
                             }
                         }
-                        $("<tr><td class='tableFileName'><i class='fileIcon fa fa fa-file-o mr-2' aria-hidden='true'></i>" +
+                        $("<tr><td class='tableFileName' index='" +
+                            filenameList.length + "'><i class='fileIcon far fa-file-alt mr-2' aria-hidden='true'></i>" +
                             entryInfo[0] + "</td><td><div data-toggle='tooltip' data-placement='top' title='" +
                             dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
                             dateTime[1] + "</div></div></td><td><div data-toggle='tooltip' data-placement='top' title='" +
                             entryInfo[2] + " KB' style='float:left;'>" +
                             Math.round(fileSizeDisplay) + " " + unit + "</div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                        filenameList.push(entryInfo[0]);
                     }
                 }
                 $(function () {
@@ -320,6 +327,7 @@
                 });
 
                 $("td.tableFileName").click(function () {
+                    currentFileIndex = Number($(this).attr("index"));
                     showFileInfo($(this).text());
                 });
             } else {
@@ -332,30 +340,65 @@
         getFileSystemEntry(sessionStorage.getItem("path"));
     };
     var showFileInfo = function (fileName) {
+        if (currentFileIndex===0){
+            previousFileButton.css("opacity", 0);
+            nextFileButton.css("opacity", 1);
+        }else if(currentFileIndex===filenameList.length-1){
+            previousFileButton.css("opacity", 1);
+            nextFileButton.css("opacity", 0);
+        }else{
+            previousFileButton.css("opacity", 1);
+            nextFileButton.css("opacity", 1);
+        }
         var fileNameArray = fileName.split(".");
         var extendName = fileNameArray[fileNameArray.length - 1];
         if (extendName === "mp4" || extendName === "MP4") {
             fileModalBody.html("<video id='fileModalVideo' width='100%' height='auto'controls preload='none'>" +
                 "<source src='/Video/PlayVideo/" + sessionStorage.getItem("path") + "/" + fileName +
                 "' type='video/mp4'></video>" +
-                "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");
+                "<div id='selectedFileName' class='fileInfo text-break'>" + fileName + "</div>");
         } else if (extendName === "JPG" || extendName === "PNG" || extendName === "GIF" ||
             extendName === "jpg" || extendName === "png" || extendName === "gif") {
             fileModalBody.html("<img src='/Image/DisplayImage/" + sessionStorage.getItem("path") + "/" + fileName + "' class='img-thumbnail'>" +
-                "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");
+                "<div id='selectedFileName' class='fileInfo text-break'>" + fileName + "</div>");
         }else {
-            fileModalBody.html("<div class='fileInfo' style='font-size:80px;color:rgb(190, 190, 190);'>" +
-                "<span class='fa fa-download' aria-hidden='true'></span></div>" +
-                "<div id='selectedFileName' class='fileInfo'>" + fileName + "</div>");
+            fileModalBody.html("<div class='fileInfo' style='font-size:90px;color:rgb(130, 130, 130);'>" +
+                "<span class='fas fa-file-alt' aria-hidden='true'></span></div>" +
+                "<div id='selectedFileName' class='fileInfo text-break'>" + fileName + "</div>");
         }
         fileModal.modal("show");
     };
 
-    $("div.navItemFont").click(function(){
+    previousFileButton.click(function(){
+        if (currentFileIndex>0){
+            currentFileIndex--;
+            resetFileModalBody();
+            showFileInfo(filenameList[currentFileIndex]);
+        }
+    });
+
+    nextFileButton.click(function(){
+        if (currentFileIndex<filenameList.length-1){
+            currentFileIndex++;
+            resetFileModalBody();
+            showFileInfo(filenameList[currentFileIndex]);
+        }
+    });
+
+    navbarCollapse.on("show.bs.collapse", function(){
+        navbarCollapseMask.show();
+    });
+
+    navbarCollapse.on("hide.bs.collapse", function(){
+        navbarCollapseMask.hide();
+    });
+
+    navbarCollapseMask.click(function(){
         if (navCollapseButton.is(":visible")){
             navbarCollapse.collapse('hide');
         } else {
             navbarCollapse.removeClass("show");
+            navbarCollapseMask.hide();
         }
     });
 

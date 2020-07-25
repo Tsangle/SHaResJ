@@ -6,7 +6,7 @@
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0" />
     <title>SHaRes</title>
     <link href="/Resource/Style/bootstrap.min.css" rel="stylesheet" />
-    <link href="/Resource/Style/font-awesome.min.css" rel="stylesheet" />
+    <link href="/Resource/Style/all.min.css" rel="stylesheet" />
     <link href="/Resource/Style/site.css" rel="stylesheet" />
 </head>
 <body>
@@ -14,7 +14,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="uploadModalLabel">Upload File</h5>
+                <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
             <div class="modal-body">
@@ -23,7 +23,7 @@
                     <div class="input-group mb-3">
                         <input id="fileNameInput" type="text" class="form-control" placeholder="file name" aria-label="file name" aria-describedby="selectFileButton">
                         <div class="input-group-append">
-                            <span class="input-group-text" id="selectFileButton" style="cursor:pointer;"><i class="fa fa-paperclip"></i></span>
+                            <span class="input-group-text" id="selectFileButton" style="cursor:pointer;"><i class="fas fa-paperclip" style="color:rgb(150, 150, 150)"></i></span>
                         </div>
                     </div>
                 </div>
@@ -36,11 +36,6 @@
                     </div>
                     <div id="networkSpeedDiv" class="networkSpeed">
                         0 B/s
-                    </div>
-                </div>
-                <div class="d-flex justify-content-center">
-                    <div id="uploadSpinner" class="spinner-border text-secondary" role="status" style="width:3rem;height:3rem;display:none;">
-                        <span class="sr-only">Waiting..</span>
                     </div>
                 </div>
             </div>
@@ -56,7 +51,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="settingModalLabel">Setting</h5>
+                <h5 class="modal-title" id="settingModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
             <div class="modal-body">
@@ -74,15 +69,23 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="fileModalLabel">File Info</h5>
+                <h5 class="modal-title" id="fileModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
-            <div class="modal-body" id="fileModalBody">
+            <div class="modal-body row">
+                <div class="col px-0" id="previousFileButton">
+                    <i class="fas fa-chevron-left center" style="color:rgb(200,200,200);"></i>
+                </div>
+                <div class="col-10 px-0" id="fileModalBody">
 
+                </div>
+                <div class="col px-0" id="nextFileButton">
+                    <i class="fas fa-chevron-right center" style="color:rgb(200,200,200);"></i>
+                </div>
             </div>
             <div class="modal-footer">
                 <button id="downloadButton" type="button" class="btn btn-secondary">Download</button>
-                <button id="deleteButton" type="button" class="btn btn-outline-danger"><i class="fa fa-trash-o"></i></button>
+                <button id="deleteButton" type="button" class="btn btn-outline-danger"><i class="far fa-trash-alt"></i></button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
@@ -92,7 +95,7 @@
     <div class="modal-dialog alertDialog">
         <div class="modal-content">
             <div class="modal-header alertHeader">
-                <h5 class="modal-title" id="alertModalLabel">Message</h5>
+                <h5 class="modal-title" id="alertModalLabel"><i class="fas fa-info-circle" style="color:rgb(150,150,150)"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
             <div id="alertModalBody" class="modal-body">
@@ -105,10 +108,10 @@
 <nav class="navbar navbar-expand-md fixed-top navbar-light bg-light navWidth px-0" role="navigation">
     <div class="container px-3">
         <a class="navbar-brand" href="/">SHaRes</a>
-        <button id="navCollapseButton" class="btn shadow-none d-md-none px-0" type="button" data-toggle="collapse" data-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+        <button id="navCollapseButton" class="btn shadow-none d-md-none px-0" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbar-collapse">
+        <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item">
                     <a class="nav-link" data-toggle="modal" data-target="#uploadModal" style="cursor:pointer">
@@ -119,6 +122,9 @@
         </div>
     </div>
 </nav>
+
+<div class="bodyMask" id="navbarCollapseMask" style="display:none;"></div>
+
 <div class="container px-3">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb px-3 py-1 my-3" id="PathBreadCrumb">
