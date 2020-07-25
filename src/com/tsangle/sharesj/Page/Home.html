@@ -11,8 +11,8 @@
 </head>
 <body>
 <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
             <div class="modal-header">
                 <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -48,8 +48,8 @@
 </div>
 
 <div class="modal fade" id="settingModal" tabindex="-1" role="dialog" aria-labelledby="settingModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
             <div class="modal-header">
                 <h5 class="modal-title" id="settingModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -66,8 +66,8 @@
 </div>
 
 <div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
             <div class="modal-header">
                 <h5 class="modal-title" id="fileModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -85,15 +85,15 @@
             </div>
             <div class="modal-footer">
                 <button id="downloadButton" type="button" class="btn btn-secondary">Download</button>
-                <button id="deleteButton" type="button" class="btn btn-outline-danger"><i class="far fa-trash-alt"></i></button>
+                <button id="deleteButton" type="button" class="btn btn-outline-danger" data-toggle="tooltip" data-trigger="manual" data-placement="top" title="Click again to confirm."><i class="far fa-trash-alt"></i></button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
 </div>
 
 <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
-    <div class="modal-dialog alertDialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered alertDialog">
+        <div class="modal-content shadow-lg">
             <div class="modal-header alertHeader">
                 <h5 class="modal-title" id="alertModalLabel"><i class="fas fa-info-circle" style="color:rgb(150,150,150)"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -105,10 +105,10 @@
     </div><!-- /.modal -->
 </div>
 
-<nav class="navbar navbar-expand-md fixed-top navbar-light bg-light navWidth px-0" role="navigation">
+<nav class="navbar navbar-expand-sm fixed-top navbar-light bg-light navWidth px-0" role="navigation">
     <div class="container px-3">
         <a class="navbar-brand" href="/">SHaRes</a>
-        <button id="navCollapseButton" class="btn shadow-none d-md-none px-0" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <button id="navCollapseButton" class="btn shadow-none d-sm-none px-0" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -122,8 +122,6 @@
         </div>
     </div>
 </nav>
-
-<div class="bodyMask" id="navbarCollapseMask" style="display:none;"></div>
 
 <div class="container px-3">
     <nav aria-label="breadcrumb">
@@ -151,6 +149,7 @@
         <p>&copy; SHaRes</p>
     </footer>
 </div>
+<div class="navbarCollapseMask" id="navbarCollapseMask" style="display:none;"></div>
 <script src="/Resource/Script/jquery-3.4.1.min.js"></script>
 <script src="/Resource/Script/bootstrap.bundle.min.js"></script>
 <script src="/Resource/Script/home.js-ver1.0.2"></script>
