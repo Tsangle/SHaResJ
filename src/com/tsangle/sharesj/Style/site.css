@@ -76,7 +76,7 @@ body {
     width: 100vw;
     height: 100vh;
     background-color: #000;
-    opacity: 0.5;
+    opacity: 0.2;
 }
 
 .center {
@@ -90,4 +90,12 @@ body {
 
 .modal-backdrop{
     background-color: transparent;
+}
+
+.navbarCollapseMaskOpen{
+    overflow: hidden;
+}
+
+.myShadow{
+    box-shadow: 0 0.3rem 1.5rem rgba(0,0,0,.3)!important;
 }

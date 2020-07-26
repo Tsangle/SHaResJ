@@ -24,6 +24,9 @@
     var navbarCollapseMask = $("#navbarCollapseMask");
     var previousFileButton = $("#previousFileButton");
     var nextFileButton = $("#nextFileButton");
+    var navbarExpandIcon = $("#navbarExpandIcon");
+    var navbarCloseIcon = $("#navbarCloseIcon");
+    var body = $("body");
     var fileUploader;
     var filenameList;
     var currentFileIndex;
@@ -361,13 +364,14 @@
         var extendName = fileNameArray[fileNameArray.length - 1];
         if (extendName === "mp4" || extendName === "MP4") {
             fileModalBody.html("<video id='fileModalVideo' width='100%' height='auto'controls preload='none'>" +
-                "<source src='/Video/PlayVideo/" + sessionStorage.getItem("path") + "/" + fileName +
-                "' type='video/mp4'></video>" +
+                "<source src='/Video/PlayVideo/" + fileName + "' type='video/mp4'></video>" +
                 "<div id='selectedFileName' class='fileInfo text-break'>" + fileName + "</div>");
+            setCookie("resource-location", sessionStorage.getItem("path") + "/" + fileName);
         } else if (extendName === "JPG" || extendName === "PNG" || extendName === "GIF" ||
             extendName === "jpg" || extendName === "png" || extendName === "gif") {
-            fileModalBody.html("<img src='/Image/DisplayImage/" + sessionStorage.getItem("path") + "/" + fileName + "' class='img-thumbnail'>" +
+            fileModalBody.html("<img src='/Image/DisplayImage/" + fileName + "' class='img-thumbnail'>" +
                 "<div id='selectedFileName' class='fileInfo text-break'>" + fileName + "</div>");
+            setCookie("resource-location", sessionStorage.getItem("path") + "/" + fileName);
         }else {
             fileModalBody.html("<div class='fileInfo' style='font-size:90px;color:rgb(130, 130, 130);'>" +
                 "<span class='fas fa-file-alt' aria-hidden='true'></span></div>" +
@@ -394,10 +398,16 @@
 
     navbarCollapse.on("show.bs.collapse", function(){
         navbarCollapseMask.fadeIn();
+        navbarExpandIcon.fadeOut();
+        navbarCloseIcon.fadeIn();
+        body.addClass("navbarCollapseMaskOpen");
     });
 
     navbarCollapse.on("hide.bs.collapse", function(){
         navbarCollapseMask.fadeOut();
+        navbarExpandIcon.fadeIn();
+        navbarCloseIcon.fadeOut();
+        body.removeClass("navbarCollapseMaskOpen");
     });
 
     navbarCollapseMask.click(function(){
@@ -406,6 +416,9 @@
         } else {
             navbarCollapse.removeClass("show");
             navbarCollapseMask.fadeOut();
+            navbarExpandIcon.show();
+            navbarCloseIcon.hide();
+            body.removeClass("navbarCollapseMaskOpen");
         }
     });
 
@@ -421,7 +434,7 @@ var setCookie = function (name, value) {
     var Days = 30;
     var exp = new Date();
     exp.setTime(exp.getTime() + Days * 24 * 60 * 60 * 1000);
-    document.cookie = name + "=" + escape(value) + ";expires=" + exp.toGMTString();
+    document.cookie = name + "=" + encodeURI(value) + ";expires=" + exp.toGMTString();
 };
 
 init();

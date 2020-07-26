@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class RequestSocket{
@@ -15,6 +17,7 @@ public class RequestSocket{
     private String errorString;
     private String url;
     private String range;
+    private Map<String,String> cookieMap;
     private long additionalDataLength;
     private StringBuilder additionResponseHeaderBuilder;
     private String statusCode;
@@ -27,6 +30,7 @@ public class RequestSocket{
         this.additionalDataLength=0;
         this.requestInputStream=null;
         this.statusCode="200";
+        this.cookieMap=new HashMap<>();
         try{
             DataInputStream inputStream=new DataInputStream(acceptSocket.getInputStream());
             StringBuilder requestInfoBuilder=new StringBuilder();
@@ -70,8 +74,17 @@ public class RequestSocket{
                                 break;
                             case "Content-Length:":
                                 additionalDataLength=Long.parseLong(requestArray[1]);
+                                break;
                             case "Range:":
                                 range=requestArray[1];
+                                break;
+                            case "Cookie:":
+                                String cookieContent=line.split(" ", 2)[1];
+                                String[] cookieItemArray=cookieContent.split("; ");
+                                for (String keyValueItem:cookieItemArray) {
+                                    String[] keyValueArray=keyValueItem.split("=", 2);
+                                    cookieMap.put(keyValueArray[0],keyValueArray[1]);
+                                }
                                 break;
                         }
                     }
@@ -104,6 +117,10 @@ public class RequestSocket{
 
     public String[] GetHost() {
         return host;
+    }
+
+    public Map<String,String> GetCookie(){
+        return cookieMap;
     }
 
     public String GetUrl(){

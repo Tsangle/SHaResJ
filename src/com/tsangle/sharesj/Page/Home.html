@@ -12,7 +12,7 @@
 <body>
 <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg">
+        <div class="modal-content myShadow">
             <div class="modal-header">
                 <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -49,7 +49,7 @@
 
 <div class="modal fade" id="settingModal" tabindex="-1" role="dialog" aria-labelledby="settingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg">
+        <div class="modal-content myShadow">
             <div class="modal-header">
                 <h5 class="modal-title" id="settingModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -67,7 +67,7 @@
 
 <div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow-lg">
+        <div class="modal-content myShadow">
             <div class="modal-header">
                 <h5 class="modal-title" id="fileModalLabel"><i class="fas fa-grip-lines"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -93,7 +93,7 @@
 
 <div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="alertModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered alertDialog">
-        <div class="modal-content shadow-lg">
+        <div class="modal-content myShadow">
             <div class="modal-header alertHeader">
                 <h5 class="modal-title" id="alertModalLabel"><i class="fas fa-info-circle" style="color:rgb(150,150,150)"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -108,8 +108,11 @@
 <nav class="navbar navbar-expand-sm fixed-top navbar-light bg-light navWidth px-0" role="navigation">
     <div class="container px-3">
         <a class="navbar-brand" href="/">SHaRes</a>
-        <button id="navCollapseButton" class="btn shadow-none d-sm-none px-0" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+        <button id="navCollapseButton" class="btn shadow-none d-sm-none p-0 mx-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" style="font-size:1.4rem;width:2rem;height:2rem;">
+            <div style="position:fixed;width:2rem;">
+                <i id="navbarExpandIcon" class="fas fa-bars center" style="color:rgb(150,150,150);"></i>
+                <i id="navbarCloseIcon" class="fas fa-times center" style="color:rgb(150,150,150);display:none;"></i>
+            </div>
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav mr-auto">
