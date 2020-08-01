@@ -1,6 +1,6 @@
 package com.tsangle.sharesj.Handler;
 
-import com.tsangle.sharesj.Model.RequestSocket;
+import com.tsangle.sharesj.HttpServer.RequestSocket;
 
 import java.util.HashMap;
 import java.util.Map;

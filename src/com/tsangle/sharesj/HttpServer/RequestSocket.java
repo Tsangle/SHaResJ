@@ -1,4 +1,4 @@
-package com.tsangle.sharesj.Model;
+package com.tsangle.sharesj.HttpServer;
 
 import java.io.*;
 import java.net.Socket;

@@ -1,11 +1,9 @@
 package com.tsangle.sharesj;
 
-import com.tsangle.sharesj.Handler.FileHandler;
 import com.tsangle.sharesj.HttpServer.HttpListener;
-import com.tsangle.sharesj.Model.MachineInfo;
+import com.tsangle.sharesj.HttpServer.ServiceNode;
 
 import java.io.*;
-import java.net.Inet4Address;
 import java.util.Scanner;
 import java.util.logging.Logger;
 
@@ -18,10 +16,10 @@ public class SharesDriver {
             Scanner scanner=new Scanner(System.in);
             System.out.println("Please input the path of shared folder:");
             String path=scanner.nextLine();
-            MachineInfo.GetInstance().SetRootPath(path);
+            ServiceNode.GetInstance().SetRootPath(path);
             System.out.println("Please input the name of this machine:");
             String machineName=scanner.nextLine();
-            MachineInfo.GetInstance().SetMachineName(machineName);
+            ServiceNode.GetInstance().SetNodeName(machineName);
             listener.Start();
             boolean continueScannerLoop=true;
             System.out.println("You can enter [E] to exit.");

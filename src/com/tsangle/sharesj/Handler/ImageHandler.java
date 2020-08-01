@@ -1,6 +1,6 @@
 package com.tsangle.sharesj.Handler;
 
-import com.tsangle.sharesj.Model.RequestSocket;
+import com.tsangle.sharesj.HttpServer.RequestSocket;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +16,7 @@ public class ImageHandler extends BaseRequestHandler {
             if(requestSocket.CheckUrlArrayFormat(3)){
                 switch (requestSocket.GetUrlArray()[1]){
                     case "DisplayImage":
-                        String imagePath = FileHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetCookie().get("resource-location"), StandardCharsets.UTF_8),true);
+                        String imagePath = FileHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetUrlArray()[2], StandardCharsets.UTF_8),true);
                         File imageFile=new File(imagePath);
                         if (imageFile.exists())
                         {

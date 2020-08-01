@@ -5,8 +5,6 @@ import com.tsangle.sharesj.Handler.Local.LocalFileHandler;
 import com.tsangle.sharesj.Handler.Local.LocalImageHandler;
 import com.tsangle.sharesj.Handler.Local.LocalResourceHandler;
 import com.tsangle.sharesj.Handler.Local.LocalVideoHandler;
-import com.tsangle.sharesj.Model.MachineInfo;
-import com.tsangle.sharesj.Model.RequestSocket;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -25,7 +23,7 @@ public class HttpListener {
 
     public HttpListener(){
         try{
-            serverSocket=new ServerSocket(MachineInfo.GetInstance().GetPort());
+            serverSocket=new ServerSocket(ServiceNode.GetInstance().GetPort());
             handlerDispenser =new HandlerDispenser();
             handlerDispenser.AddHandler(new ResourceHandler());
             handlerDispenser.AddHandler(new FileHandler());

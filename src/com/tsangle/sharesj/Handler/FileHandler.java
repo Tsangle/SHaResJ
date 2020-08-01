@@ -2,8 +2,8 @@ package com.tsangle.sharesj.Handler;
 
 import com.tsangle.sharesj.Model.FileChunk;
 import com.tsangle.sharesj.Model.FileEntity;
-import com.tsangle.sharesj.Model.MachineInfo;
-import com.tsangle.sharesj.Model.RequestSocket;
+import com.tsangle.sharesj.HttpServer.ServiceNode;
+import com.tsangle.sharesj.HttpServer.RequestSocket;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,9 +31,9 @@ public class FileHandler extends BaseRequestHandler {
 
     static String GenerateRealPath(String logicPath, boolean isFile){
         if(logicPath==null||logicPath.equals("")){
-            return MachineInfo.GetInstance().GetRootPath();
+            return ServiceNode.GetInstance().GetRootPath();
         }else{
-            String path=MachineInfo.GetInstance().GetRootPath() + "/" + logicPath;
+            String path= ServiceNode.GetInstance().GetRootPath() + "/" + logicPath;
             File file = new File(path);
             if (file.exists()&&file.isFile()==isFile)
             {
@@ -80,7 +80,7 @@ public class FileHandler extends BaseRequestHandler {
     private void SetFileInfo(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String[] strDataArray = strDataContent.split("\\|",4);
-        String filePath = MachineInfo.GetInstance().GetRootPath() + strDataArray[0];
+        String filePath = ServiceNode.GetInstance().GetRootPath() + strDataArray[0];
         String fileName = strDataArray[1];
         long fileSize = Long.parseLong(strDataArray[2]);
         File dir = new File(filePath);
