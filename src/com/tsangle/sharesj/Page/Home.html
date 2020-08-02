@@ -115,20 +115,19 @@
             </div>
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" data-toggle="modal" data-target="#uploadModal" style="cursor:pointer">
-                        <div class="navItemFont"><i class="fa fa-upload mr-1" aria-hidden="true"></i>Upload</div>
-                    </a>
-                </li>
-            </ul>
+            <div class="input-group input-group-sm ml-auto" style="width: auto;">
+                <input type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="searchLabel">
+                <div class="input-group-append">
+                    <label class="input-group-text" id="searchLabel" style="cursor:pointer;"><i class="fas fa-search"></i></label>
+                </div>
+            </div>
         </div>
     </div>
 </nav>
 
 <div class="container px-3">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb px-3 py-1 my-3" id="PathBreadCrumb">
+    <nav class="my-3" aria-label="breadcrumb">
+        <ol class="breadcrumb px-3 py-1 m-0" id="PathBreadCrumb">
             <li class="breadcrumb-item active"><a>Root</a></li>
         </ol>
     </nav>
@@ -151,6 +150,12 @@
     <footer>
         <p>&copy; SHaRes</p>
     </footer>
+    <div class="container px-3 floatingButtonBg">
+        <button id="floatingButton" type="button" class="btn btn-secondary floatingButton"><i id="floatingButtonIcon" class="fas fa-plus floatingButtonTransitionDuration" style="width:1rem;height:1rem;transition-property: transform;"></i></button>
+        <button id="creatingButton" type="button" class="btn btn-light creatingButton floatingButtonTransitionDuration"><i id="creatingButtonIcon" class="fas fa-folder-plus" style="color:rgb(150,150,150);"></i></button>
+        <button id="uploadingButton" type="button" class="btn btn-light uploadingButton floatingButtonTransitionDuration"><i id="uploadingButtonIcon" class="fas fa-upload" style="color:rgb(150,150,150);"></i></button>
+        <button id="settingButton" type="button" class="btn btn-light settingButton floatingButtonTransitionDuration"><i id="settingButtonIcon" class="fas fa-tools" style="color:rgb(150,150,150);"></i></button>
+    </div>
 </div>
 <div class="navbarCollapseMask" id="navbarCollapseMask" style="display:none;"></div>
 <script src="/Resource/Script/jquery-3.4.1.min.js"></script>

@@ -26,6 +26,11 @@
     var nextFileButton = $("#nextFileButton");
     var navbarExpandIcon = $("#navbarExpandIcon");
     var navbarCloseIcon = $("#navbarCloseIcon");
+    var floatingButton = $("#floatingButton");
+    var floatingButtonIcon = $("#floatingButtonIcon");
+    var creatingButton = $("#creatingButton");
+    var uploadingButton = $("#uploadingButton");
+    var settingButton = $("#settingButton");
     var body = $("body");
     var fileUploader;
     var filenameList;
@@ -295,7 +300,7 @@
                     var dateTime = entryInfo[1].split(" ");
                     if (entryInfo[2] === "") {
                         $("<tr><td><i class='folderIcon fas fa-folder-open mr-2' aria-hidden='true'></i><a class='entryTableFolderName'>" +
-                            entryInfo[0] + "</a></td><td><div data-toggle='tooltip' data-placement='top' title='" +
+                            entryInfo[0] + "</a></td><td><div data-toggle='tooltip' data-trigger='click' data-placement='top' title='" +
                             dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
                             dateTime[1] + "</div></div></td><td>" +
@@ -317,10 +322,10 @@
                         }
                         $("<tr><td class='tableFileName' index='" +
                             filenameList.length + "'><i class='fileIcon far fa-file-alt mr-2' aria-hidden='true'></i>" +
-                            entryInfo[0] + "</td><td><div data-toggle='tooltip' data-placement='top' title='" +
+                            entryInfo[0] + "</td><td><div data-toggle='tooltip' data-trigger='click' data-placement='top' title='" +
                             dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
-                            dateTime[1] + "</div></div></td><td><div data-toggle='tooltip' data-placement='top' title='" +
+                            dateTime[1] + "</div></div></td><td><div data-toggle='tooltip' data-trigger='click' data-placement='top' title='" +
                             entryInfo[2] + " KB' style='float:left;'>" +
                             Math.round(fileSizeDisplay) + " " + unit + "</div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                         filenameList.push(entryInfo[0]);
@@ -418,6 +423,37 @@
             navbarCloseIcon.hide();
             body.removeClass("navbarCollapseMaskOpen");
         }
+    });
+
+    var switchFloatingButton = function(){
+        if(floatingButtonIcon.hasClass("floatingButtonIconExpand")){
+            floatingButtonIcon.removeClass("floatingButtonIconExpand");
+            creatingButton.removeClass("creatingButtonExpand");
+            uploadingButton.removeClass("uploadingButtonExpand");
+            settingButton.removeClass("settingButtonExpand");
+        }else {
+            floatingButtonIcon.addClass("floatingButtonIconExpand");
+            creatingButton.addClass("creatingButtonExpand");
+            uploadingButton.addClass("uploadingButtonExpand");
+            settingButton.addClass("settingButtonExpand");
+        }
+    };
+
+    floatingButton.click(function(){
+        switchFloatingButton();
+    });
+
+    creatingButton.click(function(){
+        switchFloatingButton();
+    });
+
+    uploadingButton.click(function(){
+        switchFloatingButton();
+        uploadModal.modal("show");
+    });
+
+    settingButton.click(function(){
+        switchFloatingButton();
     });
 
     var currentPath = sessionStorage.getItem("path");
