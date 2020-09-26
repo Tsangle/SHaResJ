@@ -31,6 +31,10 @@
     var creatingButton = $("#creatingButton");
     var uploadingButton = $("#uploadingButton");
     var settingButton = $("#settingButton");
+    var settingModal = $("#settingModal");
+    var threadNumberSelect = $("#threadNumberSelect");
+    var acceptSettingButton = $("#acceptSettingButton");
+    var cancelSettingButton = $("#cancelSettingButton");
     var body = $("body");
     var fileUploader;
     var filenameList;
@@ -197,7 +201,7 @@
         if (fileInput[0].files.length > 0) {
             initUploadModal()
             var file = fileInput[0].files[0];
-            var uploadThreadCount = 5;
+            var uploadThreadCount = Number(localStorage.getItem("threadNumber"));
             fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), uploadThreadCount, notifyUploadResult);
             fileUploader.startUpload();
         } else {
@@ -299,11 +303,11 @@
                     var entryInfo = fileSystemEntries[index].split("*");
                     var dateTime = entryInfo[1].split(" ");
                     if (entryInfo[2] === "") {
-                        $("<tr><td><i class='folderIcon fas fa-folder-open mr-2' aria-hidden='true'></i><a class='entryTableFolderName'>" +
-                            entryInfo[0] + "</a></td><td><div data-toggle='tooltip' data-trigger='click' data-placement='top' title='" +
-                            dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
+                        $("<tr class='entryTableFolder'><td><div class='float-left mr-1' style='width:1rem;text-align:center;'>" +
+                            "<i class='folderIcon fas fa-folder' aria-hidden='true'></i></div>" +
+                            entryInfo[0] + "</td><td><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
-                            dateTime[1] + "</div></div></td><td>" +
+                            dateTime[1] + "</div></td><td>" +
                             entryInfo[2] + "</td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                     } else {
                         var fileSizeDisplay = parseFloat(entryInfo[2]);
@@ -320,13 +324,11 @@
                                 }
                             }
                         }
-                        $("<tr><td class='tableFileName' index='" +
-                            filenameList.length + "'><i class='fileIcon far fa-file-alt mr-2' aria-hidden='true'></i>" +
-                            entryInfo[0] + "</td><td><div data-toggle='tooltip' data-trigger='click' data-placement='top' title='" +
-                            dateTime[0] + " " + dateTime[1] + "' style='float:left;'><div style='float:left;margin-right:10px;'>" +
+                        $("<tr class='entryTableFile'><td index='" + filenameList.length + "'><div class='float-left mr-1' style='width:1rem;text-align:center;'>" +
+                            "<i class='fileIcon far fa-file-alt' aria-hidden='true'></i></div>" +
+                            entryInfo[0] + "</td><td><div style='float:left;margin-right:10px;'>" +
                             dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
-                            dateTime[1] + "</div></div></td><td><div data-toggle='tooltip' data-trigger='click' data-placement='top' title='" +
-                            entryInfo[2] + " KB' style='float:left;'>" +
+                            dateTime[1] + "</div></td><td><div style='float:left;'>" +
                             Math.round(fileSizeDisplay) + " " + unit + "</div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                         filenameList.push(entryInfo[0]);
                     }
@@ -335,17 +337,18 @@
                     $("[data-toggle='tooltip']").tooltip();
                 });
 
-                $("a.entryTableFolderName").click(function () {
+                $("tr.entryTableFolder").click(function () {
+                    folderName = $(this).children("td").first().text();
                     if (sessionStorage.getItem("path") === "") {
-                        getFileSystemEntry($(this).text());
+                        getFileSystemEntry(folderName);
                     } else {
-                        getFileSystemEntry(sessionStorage.getItem("path") + "/" + $(this).text());
+                        getFileSystemEntry(sessionStorage.getItem("path") + "/" + folderName);
                     }
                 });
 
-                $("td.tableFileName").click(function () {
-                    currentFileIndex = Number($(this).attr("index"));
-                    showFileInfo($(this).text());
+                $("tr.entryTableFile").click(function () {
+                    currentFileIndex = Number($(this).children("td").first().attr("index"));
+                    showFileInfo($(this).children("td").first().text());
                 });
             } else {
                 alertMessage(data, "Error", "danger");
@@ -454,8 +457,33 @@
 
     settingButton.click(function(){
         switchFloatingButton();
+        settingModal.modal("show");
     });
 
+    var initSetting = function(){
+        var threadNumber = localStorage.getItem("threadNumber");
+        if (threadNumber===null){
+            threadNumber="1";
+            localStorage.setItem("threadNumber", threadNumber);
+        }
+        threadNumberSelect.val(threadNumber);
+    };
+
+    settingModal.on('show.bs.modal', function(){
+        initSetting();
+    });
+
+    acceptSettingButton.click(function(){
+        localStorage.setItem("threadNumber", threadNumberSelect.val());
+        settingModal.modal("hide");
+    });
+
+    cancelSettingButton.click(function(){
+        initSetting();
+        settingModal.modal("hide");
+    });
+
+    initSetting();
     var currentPath = sessionStorage.getItem("path");
     if (currentPath !== null && currentPath !== undefined) {
         getFileSystemEntry(currentPath);

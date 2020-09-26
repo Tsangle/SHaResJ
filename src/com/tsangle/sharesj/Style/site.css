@@ -51,7 +51,7 @@ body {
     text-overflow:ellipsis;
 }
 
-.entryTableFolderName {
+.entryTableFolder {
     cursor: pointer;
 }
 
@@ -59,8 +59,8 @@ body {
     cursor: pointer;
 }
 
-.tableFileName {
-
+.entryTableFile {
+    cursor: pointer;
 }
 
 .fileInfo{
@@ -184,4 +184,9 @@ body {
 
 .floatingButtonTransitionDuration{
     transition-duration: 0.3s;
+}
+
+.modal-open
+.myStaticModal{
+    overflow-y: hidden;
 }
