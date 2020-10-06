@@ -169,7 +169,7 @@
             $.post("/File/WaitForUploadCompletion", thisObj.serverCacheID, function (data) {
                 if (data.slice(0, 1) !== "#") {
                     resetUploadModal();
-                    alertMessage("Uploading task completed!", "Info", "success");
+                    alertMessage("[" + thisObj.fileName + "] successfully uploaded!", "Info", "success");
                     refreshFileSystemEntryList();
                 } else {
                     if(!thisObj.isCanceled && !thisObj.errorDetected){

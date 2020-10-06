@@ -190,3 +190,7 @@ body {
 .myStaticModal{
     overflow-y: hidden;
 }
+
+.uploadProgressBar{
+    transition:width 0s;
+}
