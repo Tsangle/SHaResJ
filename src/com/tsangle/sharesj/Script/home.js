@@ -126,16 +126,21 @@
         }
 
         cancelUpload(){
-            var thisObj = this;
-            thisObj.isCanceled = true;
-            $.post("/File/CancelUpload", thisObj.serverCacheID, function (data) {
-                resetUploadModal();
-                if (data.slice(0, 1) !== "#") {
-                    alertMessage("Uploading task canceled!", "Info", "success");
-                } else {
-                    alertMessage(data, "Error", "danger");
-                }
-            });
+            this._cancelUploadImpl(this);
+        }
+
+        _cancelUploadImpl(thisObj){
+            if (!thisObj.isCanceled){
+                thisObj.isCanceled = true;
+                $.post("/File/CancelUpload", thisObj.serverCacheID, function (data) {
+                    resetUploadModal();
+                    if (data.slice(0, 1) !== "#") {
+                        alertMessage("Uploading task canceled!", "Info", "success");
+                    } else {
+                        alertMessage(data, "Error", "danger");
+                    }
+                });
+            }
         }
 
         _checkUploadProgress(thisObj, lastTimeStamp, lastSpeed){
@@ -159,6 +164,7 @@
                     if(!thisObj.isCanceled && !thisObj.errorDetected){
                         thisObj.errorDetected = true;
                         alertMessage(data, "Error", "danger");
+                        thisObj._cancelUploadImpl(thisObj);
                     }
                 }
             });
@@ -175,6 +181,7 @@
                     if(!thisObj.isCanceled && !thisObj.errorDetected){
                         thisObj.errorDetected = true;
                         alertMessage(data, "Error", "danger");
+                        thisObj._cancelUploadImpl(thisObj);
                     }
                 }
             });
@@ -191,6 +198,10 @@
             httpRequest.overrideMimeType("text/xml");
             httpRequest.open("POST", "/File/UploadFileChunk/"+thisObj.serverCacheID+"&"+index * thisObj.chunkSize);
             httpRequest.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+            httpRequest.onerror = function () {
+                alertMessage("Unknown error encountered while uploading Chunk #" + index + " of [" + thisObj.fileName + "]", "Error", "danger");
+                thisObj._cancelUploadImpl(thisObj);
+            };
             httpRequest.send(currentChunk);
         }
     };
