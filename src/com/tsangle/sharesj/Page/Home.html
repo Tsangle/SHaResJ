@@ -10,11 +10,11 @@
     <link href="/Resource/Style/site.css" rel="stylesheet" />
 </head>
 <body>
-<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+<div class="modal fade" id="uploadingModal" tabindex="-1" role="dialog" aria-labelledby="uploadingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content myShadow">
             <div class="modal-header">
-                <h5 class="modal-title" id="uploadModalLabel"><i class="fas fa-grip-lines" style="color:rgb(150,150,150)"></i></h5>
+                <h5 class="modal-title" id="uploadingModalLabel"><i class="fas fa-grip-lines" style="color:rgb(150,150,150)"></i></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
             <div class="modal-body">
@@ -27,27 +27,42 @@
                         </div>
                     </div>
                 </div>
-                <div id="uploadProgressDiv" style="display:none">
-                    <div class="progress">
-                        <div id="uploadProgressBar" class="progress-bar  progress-bar-striped progress-bar-animated bg-info uploadProgressBar" role="progressbar"
-                             aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"
-                             style="width: 0%;">
+                <div id="uploadingProgressDiv" style="display:none">
+                    <div>
+                        <label>Uploading:</label>
+                        <div class="progress">
+                            <div id="uploadingProgressBar" class="progress-bar  progress-bar-striped progress-bar-animated bg-info" role="progressbar"
+                                 aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"
+                                 style="width: 0%;transition:width 0s;">
+                            </div>
+                        </div>
+                        <div id="uploadingSpeedDiv" class="speedLabel">
+                            0 B/s
                         </div>
                     </div>
-                    <div id="networkSpeedDiv" class="networkSpeed">
-                        0 B/s
+                    <div>
+                        <label>Writing:</label>
+                        <div class="progress">
+                            <div id="writingProgressBar" class="progress-bar  progress-bar-striped progress-bar-animated bg-info" role="progressbar"
+                                 aria-valuenow="10" aria-valuemin="0" aria-valuemax="100"
+                                 style="width: 0%;transition:width 0s;">
+                            </div>
+                        </div>
+                        <div id="writingSpeedDiv" class="speedLabel">
+                            0 B/s
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="uploadButton" type="button" class="btn btn-secondary">Upload</button>
-                <button id="cancelUploadButton" type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                <button id="startUploadingButton" type="button" class="btn btn-secondary">Upload</button>
+                <button id="cancelUploadingButton" type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
 </div>
 
-<div class="modal fade myStaticModal" id="settingModal" tabindex="-1" role="dialog" aria-labelledby="settingModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+<div class="modal fade myStaticModal" id="settingModal" tabindex="-1" role="dialog" aria-labelledby="settingModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content myShadow">
             <div class="modal-header">

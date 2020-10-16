@@ -136,12 +136,27 @@ public class FileHandler extends BaseRequestHandler {
         }
     }
 
-    private void CheckUploadProgress(RequestSocket requestSocket) throws Exception{
+    private String generateSpeedString(double speed){
+        String speedUnit="B/s";
+        String[] speedUnitArray={"KB/s","MB/s","GB/s"};
+        for(int counter=0;counter<3;counter++){
+            if(speed/1024>1){
+                speed=speed/1024;
+                speedUnit=speedUnitArray[counter];
+            }else{
+                break;
+            }
+        }
+        return (int)speed+" "+speedUnit;
+    }
+
+    private void CheckUploadingProgress(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        String[] strDataArray = strDataContent.split("\\|",3);
+        String[] strDataArray = strDataContent.split("\\|",4);
         int serverCacheID=Integer.parseInt(strDataArray[0]);
-        double currentUploadProgress=Double.parseDouble(strDataArray[1]);
-        long lastTimeStamp=Long.parseLong(strDataArray[2]);
+        double currentUploadingProgress=Double.parseDouble(strDataArray[1]);
+        double currentWritingProgress=Double.parseDouble(strDataArray[2]);
+        long lastTimeStamp=Long.parseLong(strDataArray[3]);
         FileEntity fileEntity=fileEntityDictionary.get(serverCacheID);
         if(fileEntity!=null){
             for(long fileSize=fileEntity.GetFileSize();;){
@@ -154,57 +169,53 @@ public class FileHandler extends BaseRequestHandler {
                     break;
                 }
                 long readSize=fileEntity.GetReadSize();
+                long writtenSize=fileEntity.GetWrittenSize();
                 double fReadSize=(double)readSize;
+                double fWrittenSize=(double)writtenSize;
                 double fFileSize=(double)fileSize;
-                double progress=fReadSize*100/fFileSize;
-                if(progress<=currentUploadProgress){
+                double uploadingProgress=fReadSize*100/fFileSize;
+                double writingProgress=fWrittenSize*100/fFileSize;
+                if(uploadingProgress<=currentUploadingProgress&&writingProgress<=currentWritingProgress){
                     Thread.sleep(100);
                 }else{
                     long currentTime=new Date().getTime();
                     long currentTimeStamp=currentTime-fileEntity.GetCreatedTime();
                     double timeGap=(double) (currentTimeStamp-lastTimeStamp);
-                    double speed=0;
-                    String speedUnit="B/s";
+                    double uploadingSpeed=0;
+                    String uploadingSpeedString="0 B/s";
+                    double writingSpeed=0;
+                    String writingSpeedString="0 B/s";
                     if(timeGap>1000){
-                        double newlyAddedSize=(double)fileEntity.GetNewlyReadSize();
+                        double newlyReadSize=(double)fileEntity.GetNewlyReadSize();
+                        double newlyWrittenSize=(double)fileEntity.GetNewlyWrittenSize();
                         fileEntity.ResetNewlyReadSize();
-                        speed=newlyAddedSize/timeGap*1000;
-                        String[] speedUnitArray={"KB/s","MB/s","GB/s"};
-                        for(int counter=0;counter<3;counter++){
-                            if(speed/1024>1){
-                                speed=speed/1024;
-                                speedUnit=speedUnitArray[counter];
-                            }else{
-                                break;
-                            }
-                        }
+                        fileEntity.ResetNewlyWrittenSize();
+                        uploadingSpeed=newlyReadSize/timeGap*1000;
+                        writingSpeed=newlyWrittenSize/timeGap*1000;
+                        uploadingSpeedString=generateSpeedString(uploadingSpeed);
+                        writingSpeedString=generateSpeedString(writingSpeed);
                     }else{
                         currentTimeStamp=lastTimeStamp;
                     }
                     String isFinished="0";
-                    if(readSize==fileSize){
+                    if(writtenSize==fileSize){
                         isFinished="1";
+                        fileEntity.WaitForOutputCompletion();
+                        synchronized (syncObject){
+                            fileEntityDictionary.remove(serverCacheID);
+                        }
+                        if(fileEntity.GetErrorMessage()!=null){
+                            HandleErrorMessage(requestSocket,fileEntity.GetErrorMessage());
+                            break;
+                        }
                     }
-                    HandleResponseMessage(requestSocket,"text/plain",progress+"|"+currentTimeStamp+"|"+(int)speed+" "+speedUnit+"|"+isFinished);
+                    HandleResponseMessage(requestSocket,"text/plain",uploadingProgress+"|"+writingProgress+"|"+currentTimeStamp+"|"+uploadingSpeedString+"|"+writingSpeedString+"|"+isFinished);
                     break;
                 }
             }
         }else{
             HandleErrorMessage(requestSocket, "Can't find the specified cache ID: [" + serverCacheID + "]");
         }
-    }
-
-    private void WaitForUploadCompletion(RequestSocket requestSocket) throws Exception{
-        String strServerCacheID=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        int serverCacheID=Integer.parseInt(strServerCacheID);
-        FileEntity fileEntity=fileEntityDictionary.get(serverCacheID);
-        if(fileEntity!=null){
-            fileEntity.WaitForOutputCompletion();
-            synchronized (syncObject){
-                fileEntityDictionary.remove(serverCacheID);
-            }
-        }
-        HandleResponseMessage(requestSocket, "text/plain","Success!");
     }
 
     private void CancelStoreFile(RequestSocket requestSocket) throws Exception{
@@ -280,13 +291,10 @@ public class FileHandler extends BaseRequestHandler {
                         case "SetFileInfo":
                             SetFileInfo(requestSocket);
                             break;
-                        case "CheckUploadProgress":
-                            CheckUploadProgress(requestSocket);
+                        case "CheckUploadingProgress":
+                            CheckUploadingProgress(requestSocket);
                             break;
-                        case "WaitForUploadCompletion":
-                            WaitForUploadCompletion(requestSocket);
-                            break;
-                        case "CancelUpload":
+                        case "CancelUploading":
                             CancelStoreFile(requestSocket);
                             break;
                         case "DownloadFile":

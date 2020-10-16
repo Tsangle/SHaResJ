@@ -2,13 +2,15 @@
     var fileInput = $("#fileInput");
     var selectFileButton = $("#selectFileButton");
     var fileNameInput = $("#fileNameInput");
-    var uploadButton = $("#uploadButton");
-    var cancelUploadButton = $("#cancelUploadButton");
+    var startUploadingButton = $("#startUploadingButton");
+    var cancelUploadingButton = $("#cancelUploadingButton");
     var selectFileDiv = $("#selectFileDiv");
-    var uploadProgressDiv = $("#uploadProgressDiv");
-    var uploadProgressBar = $("#uploadProgressBar");
-    var uploadModal = $("#uploadModal");
-    var networkSpeedDiv = $("#networkSpeedDiv");
+    var uploadingProgressDiv = $("#uploadingProgressDiv");
+    var uploadingProgressBar = $("#uploadingProgressBar");
+    var writingProgressBar = $("#writingProgressBar");
+    var uploadingModal = $("#uploadingModal");
+    var uploadingSpeedDiv = $("#uploadingSpeedDiv");
+    var writingSpeedDiv = $("#writingSpeedDiv");
     var fileListTableBody = $("#FileListTableBody");
     var pathBreadCrumb = $("#PathBreadCrumb");
     var navbarCollapse = $("#navbarCollapse");
@@ -54,7 +56,7 @@
         resetFileModalBody();
     });
     var alertMessage = function (message, type = "Info", style = "info") {
-        $("<div class='alert alert-" + style + " alert-dismissable fade show' role='alert'>" +
+        $("<div class='alert alert-" + style + " alert-dismissable fade show text-break' role='alert'>" +
             "<strong>" + type + ": </strong>" + message +
             "</div>").appendTo(alertModalBody).hide().fadeIn();
         alertModal.modal("show");
@@ -62,33 +64,43 @@
     alertModal.on('hidden.bs.modal', function () {
         alertModalBody.html("");
     });
-    var initUploadModal = function () {
+    var initUploadingModal = function () {
         selectFileDiv.hide();
-        uploadProgressBar.css("width", "0%");
-        networkSpeedDiv.html("0 B/s");
-        uploadProgressDiv.show();
-        uploadButton.attr("disabled", true);
-        uploadButton.text("Uploading...")
+        uploadingProgressBar.css("width", "0%");
+        uploadingSpeedDiv.html("0 B/s");
+        writingProgressBar.css("width", "0%");
+        writingSpeedDiv.html("0 B/s");
+        uploadingProgressDiv.show();
+        startUploadingButton.attr("disabled", true);
+        startUploadingButton.text("Uploading...")
     }
-    var showSpinnerInUploadModal = function () {
-        uploadButton.text("Waiting...")
-        networkSpeedDiv.html("<div class='spinner-border text-secondary spinner-border-sm' role='status'></div>");
-    };
-    var resetUploadModal = function () {
+    var resetUploadingModal = function () {
         fileUploader = undefined;
-        uploadModal.modal('hide');
+        uploadingModal.modal('hide');
         selectFileDiv.show();
-        uploadProgressDiv.hide();
-        uploadProgressBar.css("width", "0%");
+        uploadingProgressDiv.hide();
+        uploadingProgressBar.css("width", "0%");
+        writingProgressBar.css("width", "0%");
         fileInput.val("");
         fileNameInput.val("");
-        networkSpeedDiv.html("0 B/s");
-        uploadButton.attr("disabled", false);
-        uploadButton.text("Upload")
+        uploadingSpeedDiv.html("0 B/s");
+        writingSpeedDiv.html("0 B/s");
+        startUploadingButton.attr("disabled", false);
+        startUploadingButton.text("Upload")
     };
-    var notifyUploadResult = function (completedPercentage, networkSpeed) {
-        uploadProgressBar.css("width", completedPercentage + "%");
-        networkSpeedDiv.html(networkSpeed);
+    var notifyUploadingResult = function (uploadingProgress, uploadingSpeed, writingProgress, writingSpeed) {
+        uploadingProgressBar.css("width", uploadingProgress + "%");
+        if(uploadingProgress>=100){
+            uploadingSpeedDiv.html("<i class='fas fa-check-circle' style='color:rgb(150,150,150);'></i>");
+        }else{
+            uploadingSpeedDiv.html(uploadingSpeed);
+        }
+        writingProgressBar.css("width", writingProgress + "%");
+        if(writingProgress>=100){
+            writingSpeedDiv.html("<i class='fas fa-check-circle' style='color:rgb(150,150,150);'></i>");
+        }else{
+            writingSpeedDiv.html(writingSpeed);
+        }
     };
     var FileUploader = class {
         constructor(file, path, fileName, threadCount, notifyFunc) {
@@ -105,10 +117,11 @@
             this.notifyFunc = notifyFunc;
             this.serverCacheID = 0;
             this.isCanceled = false;
-            this.uploadProgress = 0;
+            this.uploadingProgress = 0;
+            this.writingProgress = 0;
         }
 
-        startUpload() {
+        startUploading() {
             var fileInfo = this.path + "|" + this.fileName + "|" + this.file.size;
             var thisObj = this;
             $.post("/File/SetFileInfo", fileInfo, function (data) {
@@ -117,23 +130,23 @@
                     for (var index = 0; index < thisObj.threadCount; index++) {
                         thisObj._uploadChunk(index,thisObj);
                     }
-                    thisObj._checkUploadProgress(thisObj, 0, "0 B/s");
+                    thisObj._checkUploadingProgress(thisObj, 0, "0 B/s", "0 B/s");
                 } else {
-                    resetUploadModal();
+                    resetUploadingModal();
                     alertMessage(data, "Error", "danger");
                 }
             });
         }
 
-        cancelUpload(){
-            this._cancelUploadImpl(this);
+        cancelUploading(){
+            this._cancelUploadingImpl(this);
         }
 
-        _cancelUploadImpl(thisObj){
+        _cancelUploadingImpl(thisObj){
             if (!thisObj.isCanceled){
                 thisObj.isCanceled = true;
-                $.post("/File/CancelUpload", thisObj.serverCacheID, function (data) {
-                    resetUploadModal();
+                $.post("/File/CancelUploading", thisObj.serverCacheID, function (data) {
+                    resetUploadingModal();
                     if (data.slice(0, 1) !== "#") {
                         alertMessage("Uploading task canceled!", "Info", "success");
                     } else {
@@ -143,45 +156,33 @@
             }
         }
 
-        _checkUploadProgress(thisObj, lastTimeStamp, lastSpeed){
-            $.post("/File/CheckUploadProgress", thisObj.serverCacheID + "|" + thisObj.uploadProgress + "|" + lastTimeStamp, function (data) {
+        _checkUploadingProgress(thisObj, lastTimeStamp, lastUploadingSpeed, lastWritingSpeed){
+            $.post("/File/CheckUploadingProgress", thisObj.serverCacheID + "|" + thisObj.uploadingProgress + "|" + thisObj.writingProgress + "|" + lastTimeStamp, function (data) {
                 if (data.slice(0, 1) !== "#") {
                     var dataArray = data.split("|");
-                    thisObj.uploadProgress = parseFloat(dataArray[0]);
-                    var timeStamp = Number(dataArray[1]);
-                    var speed = dataArray[2];
-                    var status = Number(dataArray[3]);
+                    thisObj.uploadingProgress = parseFloat(dataArray[0]);
+                    thisObj.writingProgress = parseFloat(dataArray[1]);
+                    var timeStamp = Number(dataArray[2]);
+                    var uploadingSpeed = dataArray[3];
+                    var writingSpeed = dataArray[4];
+                    var status = Number(dataArray[5]);
                     if(lastTimeStamp===timeStamp) {
-                        speed = lastSpeed;
+                        uploadingSpeed = lastUploadingSpeed;
+                        writingSpeed = lastWritingSpeed;
                     }
-                    thisObj.notifyFunc(thisObj.uploadProgress, speed);
+                    thisObj.notifyFunc(thisObj.uploadingProgress, uploadingSpeed, thisObj.writingProgress, writingSpeed);
                     if(status===0){
-                        thisObj._checkUploadProgress(thisObj, timeStamp, speed);
+                        thisObj._checkUploadingProgress(thisObj, timeStamp, uploadingSpeed, writingSpeed);
                     }else{
-                        thisObj._waitForUploadCompletion(thisObj);
+                        resetUploadingModal();
+                        alertMessage("[" + thisObj.fileName + "] uploaded!", "Info", "success");
+                        refreshFileSystemEntryList();
                     }
                 } else {
                     if(!thisObj.isCanceled && !thisObj.errorDetected){
                         thisObj.errorDetected = true;
                         alertMessage(data, "Error", "danger");
-                        thisObj._cancelUploadImpl(thisObj);
-                    }
-                }
-            });
-        }
-
-        _waitForUploadCompletion(thisObj){
-            showSpinnerInUploadModal();
-            $.post("/File/WaitForUploadCompletion", thisObj.serverCacheID, function (data) {
-                if (data.slice(0, 1) !== "#") {
-                    resetUploadModal();
-                    alertMessage("[" + thisObj.fileName + "] successfully uploaded!", "Info", "success");
-                    refreshFileSystemEntryList();
-                } else {
-                    if(!thisObj.isCanceled && !thisObj.errorDetected){
-                        thisObj.errorDetected = true;
-                        alertMessage(data, "Error", "danger");
-                        thisObj._cancelUploadImpl(thisObj);
+                        thisObj._cancelUploadingImpl(thisObj);
                     }
                 }
             });
@@ -200,7 +201,7 @@
             httpRequest.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
             httpRequest.onerror = function () {
                 alertMessage("Unknown error encountered while uploading Chunk #" + index + " of [" + thisObj.fileName + "]", "Error", "danger");
-                thisObj._cancelUploadImpl(thisObj);
+                thisObj._cancelUploadingImpl(thisObj);
             };
             httpRequest.send(currentChunk);
         }
@@ -208,22 +209,22 @@
     selectFileButton.click(function () {
         fileInput.trigger("click");
     });
-    uploadButton.click(function () {
+    startUploadingButton.click(function () {
         if (fileInput[0].files.length > 0) {
-            initUploadModal()
+            initUploadingModal()
             var file = fileInput[0].files[0];
-            var uploadThreadCount = Number(localStorage.getItem("threadNumber"));
-            fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), uploadThreadCount, notifyUploadResult);
-            fileUploader.startUpload();
+            var uploadingThreadCount = Number(localStorage.getItem("threadNumber"));
+            fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), uploadingThreadCount, notifyUploadingResult);
+            fileUploader.startUploading();
         } else {
             alertMessage("Please select a file!", "Warning", "warning");
         }
     });
-    cancelUploadButton.click(function () {
+    cancelUploadingButton.click(function () {
         if (fileUploader !== undefined) {
-            fileUploader.cancelUpload();
+            fileUploader.cancelUploading();
         } else {
-            resetUploadModal();
+            resetUploadingModal();
         }
     });
     deleteButton.click(function (event) {
@@ -463,7 +464,7 @@
 
     uploadingButton.click(function(){
         switchFloatingButton();
-        uploadModal.modal("show");
+        uploadingModal.modal("show");
     });
 
     settingButton.click(function(){

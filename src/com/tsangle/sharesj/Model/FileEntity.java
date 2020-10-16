@@ -13,7 +13,9 @@ public class FileEntity {
 
     private final long fileSize;
 
-    private final Object syncChunk;
+    private final Object syncChunkReading;
+
+    private final Object syncChunkWriting;
 
     private long writtenSize;
 
@@ -33,13 +35,16 @@ public class FileEntity {
 
     private long newlyReadSize;
 
+    private long newlyWrittenSize;
+
     public FileEntity(String filePath, long fileSize){
         this.filePath=filePath;
         this.fileSize=fileSize;
         writtenSize=0;
         isCanceled=false;
         errorMessage=null;
-        syncChunk=new Object();
+        syncChunkReading=new Object();
+        syncChunkWriting=new Object();
         headChunk=new FileChunk();
         currentChunk=headChunk;
         outputThread=new Thread(new Runnable() {
@@ -50,12 +55,13 @@ public class FileEntity {
         });
         outputThread.start();
         createdTime=new Date().getTime();
-        newlyReadSize =0;
+        newlyReadSize=0;
+        newlyWrittenSize=0;
         readSize=0;
     }
 
     public void AddNewChunk(FileChunk newChunk){
-        synchronized (syncChunk)
+        synchronized (syncChunkReading)
         {
             headChunk.SetNextChunk(newChunk);
             headChunk=newChunk;
@@ -84,13 +90,27 @@ public class FileEntity {
         return readSize;
     }
 
+    public long GetWrittenSize(){
+        return writtenSize;
+    }
+
     public long GetNewlyReadSize(){
         return newlyReadSize;
     }
 
+    public long GetNewlyWrittenSize(){
+        return newlyWrittenSize;
+    }
+
     public void ResetNewlyReadSize(){
-        synchronized (syncChunk){
-            newlyReadSize =0;
+        synchronized (syncChunkReading){
+            newlyReadSize=0;
+        }
+    }
+
+    public void ResetNewlyWrittenSize(){
+        synchronized (syncChunkWriting){
+            newlyWrittenSize=0;
         }
     }
 
@@ -107,23 +127,24 @@ public class FileEntity {
     }
 
     private void OutputChunk(){
-        try{
-            RandomAccessFile randomAccessFile=new RandomAccessFile(filePath,"rws");
+        try(RandomAccessFile randomAccessFile=new RandomAccessFile(filePath,"rws")){
             for(;writtenSize<fileSize;){
                 if(currentChunk.GetNextChunk()==null){
                     Thread.sleep(100);
                 }else{
                     randomAccessFile.seek(currentChunk.GetNextChunk().GetPosition());
                     randomAccessFile.write(currentChunk.GetNextChunk().GetChunkData());
-                    currentChunk=currentChunk.GetNextChunk();
-                    writtenSize+=currentChunk.GetChunkData().length;
+                    synchronized (syncChunkWriting){
+                        currentChunk=currentChunk.GetNextChunk();
+                        writtenSize+=currentChunk.GetChunkData().length;
+                        newlyWrittenSize+=currentChunk.GetChunkData().length;
+                    }
                     System.gc();
                 }
                 if(isCanceled)
                     break;
                 System.gc();
             }
-            randomAccessFile.close();
         }catch (Exception e){
             StringWriter writer=new StringWriter();
             e.printStackTrace(new PrintWriter(writer));

@@ -1,4 +1,4 @@
-﻿.networkSpeed{
+﻿.speedLabel{
     width:inherit;
     text-align:right;
 }
@@ -189,8 +189,4 @@ body {
 .modal-open
 .myStaticModal{
     overflow-y: hidden;
-}
-
-.uploadProgressBar{
-    transition:width 0s;
 }
