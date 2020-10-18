@@ -285,9 +285,9 @@
             pathNodeArray = [];
             currentFolderNameElement.html("<i class='fas fa-caret-down'></i> Home");
         }
-        pathDropdownMenu.html("<span class='dropdown-item text-truncate pathDropdownMenuItem'  style='padding-left:1rem;'><i class='fas fa-hdd' style='color:rgb(150,150,150);'></i> Home</span>")
+        pathDropdownMenu.html("<span class='dropdown-item text-truncate pathDropdownMenuItem'  style='padding-left:1rem;'><i class='fas fa-hdd' style='color:rgb(150,150,150);margin-right:.5rem;'></i>Home</span>")
         for(var index = 0; index < pathNodeArray.length; index++) {
-            pathDropdownMenu.append("<span class='dropdown-item text-truncate pathDropdownMenuItem' style='padding-left:" + (1 + 0.5*(index + 1)) + "rem'><i class='far fa-folder' style='color:rgb(150,150,150);'></i> " + pathNodeArray[index] + "</span>");
+            pathDropdownMenu.append("<span class='dropdown-item text-truncate pathDropdownMenuItem' style='padding-left:" + (1 + 0.5*(index + 1)) + "rem'><i class='far fa-folder' style='color:rgb(150,150,150);margin-right:.5rem;'></i>" + pathNodeArray[index] + "</span>");
         }
         $("span.pathDropdownMenuItem").click(function () {
             var length = $("span.pathDropdownMenuItem").index(this) + 1;
