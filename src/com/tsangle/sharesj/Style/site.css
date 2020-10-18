@@ -16,7 +16,7 @@
 }
 
 body {
-    padding-top: 3.5rem;
+    padding-top: 4rem;
     padding-bottom: 1rem;
     width:100vw;
     overflow-x:hidden;
@@ -55,7 +55,7 @@ body {
     cursor: pointer;
 }
 
-.pathBreadCrumbFoldrName {
+.pathDropdownMenuItem {
     cursor: pointer;
 }
 

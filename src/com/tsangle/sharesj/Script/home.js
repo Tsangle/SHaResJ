@@ -12,7 +12,6 @@
     var uploadingSpeedDiv = $("#uploadingSpeedDiv");
     var writingSpeedDiv = $("#writingSpeedDiv");
     var fileListTableBody = $("#FileListTableBody");
-    var pathBreadCrumb = $("#PathBreadCrumb");
     var navbarCollapse = $("#navbarCollapse");
     var alertModal = $("#alertModal");
     var alertModalBody = $("#alertModalBody");
@@ -21,13 +20,8 @@
     var deleteButton = $("#deleteButton");
     var downloadButton = $("#downloadButton");
     var fileListSpinner = $("#fileListSpinner");
-    var deviceSizeDetector = $("#deviceSizeDetector");
-    var navCollapseButton = $("#navCollapseButton");
-    var navbarCollapseMask = $("#navbarCollapseMask");
     var previousFileButton = $("#previousFileButton");
     var nextFileButton = $("#nextFileButton");
-    var navbarExpandIcon = $("#navbarExpandIcon");
-    var navbarCloseIcon = $("#navbarCloseIcon");
     var floatingButton = $("#floatingButton");
     var floatingButtonIcon = $("#floatingButtonIcon");
     var creatingButton = $("#creatingButton");
@@ -37,6 +31,8 @@
     var threadNumberSelect = $("#threadNumberSelect");
     var acceptSettingButton = $("#acceptSettingButton");
     var cancelSettingButton = $("#cancelSettingButton");
+    var pathDropdownMenu = $("#pathDropdownMenu");
+    var currentFolderNameElement = $("#currentFolderNameElement");
     var body = $("body");
     var fileUploader;
     var filenameList;
@@ -280,34 +276,34 @@
         }
     });
     var getFileSystemEntry = function (path) {
+        sessionStorage.setItem("path", path);
+        var pathNodeArray;
+        if (path !==""){
+            pathNodeArray = path.split("/");
+            currentFolderNameElement.html("<i class='fas fa-caret-down'></i> " + pathNodeArray[pathNodeArray.length-1]);
+        } else {
+            pathNodeArray = [];
+            currentFolderNameElement.html("<i class='fas fa-caret-down'></i> Home");
+        }
+        pathDropdownMenu.html("<span class='dropdown-item text-truncate pathDropdownMenuItem'  style='padding-left:1rem;'><i class='fas fa-hdd' style='color:rgb(150,150,150);'></i> Home</span>")
+        for(var index = 0; index < pathNodeArray.length; index++) {
+            pathDropdownMenu.append("<span class='dropdown-item text-truncate pathDropdownMenuItem' style='padding-left:" + (1 + 0.5*(index + 1)) + "rem'><i class='far fa-folder' style='color:rgb(150,150,150);'></i> " + pathNodeArray[index] + "</span>");
+        }
+        $("span.pathDropdownMenuItem").click(function () {
+            var length = $("span.pathDropdownMenuItem").index(this) + 1;
+            var targetPath = "";
+            for (var index = 1; index < length; index++) {
+                targetPath += $("span.pathDropdownMenuItem").eq(index).text();
+                if (index < length - 1) {
+                    targetPath += "/";
+                }
+            }
+            getFileSystemEntry(targetPath);
+        });
         fileListTableBody.empty();
         fileListSpinner.show();
         $.post("/File/GetFileSystemEntries", path, function (data) {
             if (data.slice(0,1)!=="#") {
-                sessionStorage.setItem("path", path);
-                var pathNodeArray;
-                if (path !==""){
-                    pathNodeArray = path.split("/");
-                    pathNodeArray.unshift("Root");
-                } else {
-                    pathNodeArray = ["Root"];
-                }
-                pathBreadCrumb.empty();
-                for(var index = 0; index < pathNodeArray.length - 1; index++) {
-                    pathBreadCrumb.append("<li class='breadcrumb-item'><a class='pathBreadCrumbFoldrName'>" + pathNodeArray[index] + "</a></li>");
-                }
-                pathBreadCrumb.append("<li class='breadcrumb-item active'><a>" + pathNodeArray[pathNodeArray.length - 1] + "</a></li>");
-                $("a.pathBreadCrumbFoldrName").click(function () {
-                    var length = $("a.pathBreadCrumbFoldrName").index(this) + 1;
-                    var targetPath = "";
-                    for (var index = 1; index < length; index++) {
-                        targetPath += $("a.pathBreadCrumbFoldrName").eq(index).text();
-                        if (index < length - 1) {
-                            targetPath += "/";
-                        }
-                    }
-                    getFileSystemEntry(targetPath);
-                });
                 fileListSpinner.hide();
                 var fileSystemEntries = data.split("|");
                 filenameList = [];
@@ -411,32 +407,6 @@
             currentFileIndex++;
             resetFileModalBody();
             showFileInfo(filenameList[currentFileIndex]);
-        }
-    });
-
-    navbarCollapse.on("show.bs.collapse", function(){
-        navbarCollapseMask.fadeIn();
-        navbarExpandIcon.fadeOut();
-        navbarCloseIcon.fadeIn();
-        body.addClass("navbarCollapseMaskOpen");
-    });
-
-    navbarCollapse.on("hide.bs.collapse", function(){
-        navbarCollapseMask.fadeOut();
-        navbarExpandIcon.fadeIn();
-        navbarCloseIcon.fadeOut();
-        body.removeClass("navbarCollapseMaskOpen");
-    });
-
-    navbarCollapseMask.click(function(){
-        if (navCollapseButton.is(":visible")){
-            navbarCollapse.collapse('hide');
-        } else {
-            navbarCollapse.removeClass("show");
-            navbarCollapseMask.fadeOut();
-            navbarExpandIcon.show();
-            navbarCloseIcon.hide();
-            body.removeClass("navbarCollapseMaskOpen");
         }
     });
 
