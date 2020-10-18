@@ -133,12 +133,23 @@
 
 <nav class="navbar navbar-expand-sm fixed-top navbar-light bg-light navWidth px-0" role="navigation">
     <div class="container px-3">
-        <div class="dropdown" style="max-width:50%;">
-            <div class="navbar-brand text-truncate" id="currentFolderNameElement" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor: pointer;max-width:100%;vertical-align:top;">
-                <i class="fas fa-caret-down"></i> Home
-            </div>
-            <div class="dropdown-menu" id="pathDropdownMenu" aria-labelledby="currentLocationSpan" style="max-width:200%;">
-                <span class="dropdown-item text-truncate pathDropdownMenuItem">Home</span>
+        <div class="dropdown" style="width:100%;">
+            <table data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor:pointer;table-layout:fixed;width:100%;">
+                <tbody>
+                    <tr>
+                        <td style="width:1.5rem;"><i class="fas fa-caret-down"></i></td>
+                        <td class="text-truncate">
+                            <span id="currentFolderNameElement" style="font-size:1.15rem;">Home</span>
+                            <div style="font-size:.7rem;color:rgb(150,150,150);">
+                                Folder:<span id="folderNumberElement" style="margin-left:.25rem;margin-right:.5rem;">0</span>
+                                File:<span id="fileNumberElement" style="margin-left:.25rem;">0</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="dropdown-menu" id="pathDropdownMenu" style="max-width:100%;">
+                <span class="dropdown-item text-truncate pathDropdownMenuItem" style="padding-left:1rem;"><i class="fas fa-hdd" style="color:rgb(150,150,150);margin-right:.5rem;"></i>Home</span>
             </div>
         </div>
     </div>
