@@ -33,6 +33,7 @@
     var cancelSettingButton = $("#cancelSettingButton");
     var pathDropdownMenu = $("#pathDropdownMenu");
     var currentFolderNameElement = $("#currentFolderNameElement");
+    var dropdownIcon = $("#dropdownIcon");
     var body = $("body");
     var fileUploader;
     var filenameList;
@@ -50,6 +51,13 @@
 
     fileModal.on('hidden.bs.modal', function () {
         resetFileModalBody();
+    });
+    var setMaxWidthForNav = function(){
+        pathDropdownMenu.css("max-width", $("div.container").width()+"px");
+        currentFolderNameElement.css("max-width", ($("div.container").width()-18)+"px");
+    };
+    $( window ).resize(function() {
+        setMaxWidthForNav();
     });
     var alertMessage = function (message, type = "Info", style = "info") {
         $("<div class='alert alert-" + style + " alert-dismissable fade show text-break' role='alert'>" +
@@ -464,7 +472,7 @@
         initSetting();
         settingModal.modal("hide");
     });
-
+    setMaxWidthForNav();
     initSetting();
     var currentPath = sessionStorage.getItem("path");
     if (currentPath !== null && currentPath !== undefined) {

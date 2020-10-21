@@ -8,6 +8,7 @@
     <link href="/Resource/Style/bootstrap.min.css" rel="stylesheet" />
     <link href="/Resource/Style/all.min.css" rel="stylesheet" />
     <link href="/Resource/Style/site.css" rel="stylesheet" />
+    <link href="/Resource/Style/ripple.css" rel="stylesheet" />
 </head>
 <body>
 <div class="modal fade" id="uploadingModal" tabindex="-1" role="dialog" aria-labelledby="uploadingModalLabel" aria-hidden="true">
@@ -131,17 +132,19 @@
     </div><!-- /.modal -->
 </div>
 
-<nav class="navbar navbar-expand-sm fixed-top navbar-light bg-light navWidth px-0" role="navigation" style="box-shadow:0 .1rem .5rem rgba(0,0,0,.1);">
+<nav class="navbar navbar-expand-sm fixed-top navbar-light bg-light navWidth px-0 py-1" role="navigation" style="box-shadow:0 .1rem .5rem rgba(0,0,0,.1);">
     <div class="container px-3">
-        <div class="dropdown" style="width:100%;">
-            <div class="d-inline-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button" style="max-width:90%;vertical-align:top;">
-                <div id="currentFolderNameElement" class="text-truncate d-inline-block" style="font-size:1.15rem;max-width:100%;font-weight:500;line-height:110%;">Home</div>
-                <div style="font-size:.7rem;color:rgb(150,150,150);line-height:100%;">
-                    Folder:<span id="folderNumberElement" style="margin-left:.25rem;margin-right:.5rem;">0</span>
-                    File:<span id="fileNumberElement" style="margin-left:.25rem;">0</span>
-                </div>
-            </div><i data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="fas fa-caret-down" role="button" style="color:rgb(120,120,120);padding:.6875rem 0 .6875rem .5rem;"></i>
-            <div class="dropdown-menu" id="pathDropdownMenu" style="max-width:100%;">
+        <div class="dropdown">
+            <div class="text-nowrap rippleDarkEnable py-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button">
+                <div class="d-inline-block" style="vertical-align:top;">
+                    <div id="currentFolderNameElement" class="text-truncate d-inline-block" style="font-size:1.15rem;font-weight:500;line-height:110%;">Home</div>
+                    <div style="font-size:.7rem;color:rgb(150,150,150);line-height:100%;">
+                        Folder:<span id="folderNumberElement" style="margin-left:.25rem;margin-right:.5rem;">0</span>
+                        File:<span id="fileNumberElement" style="margin-left:.25rem;">0</span>
+                    </div>
+                </div><i id="dropdownIcon" class="fas fa-caret-down" style="color:rgb(120,120,120);padding:.6875rem 0 .6875rem .5rem;"></i>
+            </div>
+            <div class="dropdown-menu fade" id="pathDropdownMenu">
                 <span class="dropdown-item text-truncate pathDropdownMenuItem" style="padding-left:1rem;"><i class="fas fa-hdd" style="color:rgb(150,150,150);margin-right:.5rem;"></i>Home</span>
             </div>
         </div>
@@ -178,5 +181,6 @@
 <script src="/Resource/Script/jquery-3.4.1.min.js"></script>
 <script src="/Resource/Script/bootstrap.bundle.min.js"></script>
 <script src="/Resource/Script/home.js-ver1.0.2"></script>
+<script src="/Resource/Script/ripple.js"></script>
 </body>
 </html>

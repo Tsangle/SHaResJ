@@ -190,3 +190,13 @@ body {
 .myStaticModal{
     overflow-y: hidden;
 }
+
+.dropdown-menu.fade {
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+}
+.show > .dropdown-menu.fade {
+    pointer-events: auto;
+    opacity: 1;
+}
