@@ -1,0 +1,53 @@
+.floatingMenuContainer{
+    position: fixed;
+    pointer-events: none;
+    top: 0;
+    left: 50vw;
+    height: 100%;
+    transform: translate(-50%, 0);
+}
+
+.floatingMenuItem{
+    position: fixed;
+    pointer-events: auto;
+    top: calc(100% - 5.5rem);
+    left: calc(100% - 4.5rem);
+    border-radius: 50%;
+}
+
+.floatingMenuItem.toggleButton{
+    width:3rem;
+    height:3rem;
+    box-shadow: 0 .2rem .5rem rgba(0,0,0,.5)!important;
+}
+
+.floatingMenuItem.itemButton{
+     width:2.8rem;
+     height:2.8rem;
+     box-shadow: 0 .2rem .5rem rgba(0,0,0,.3)!important;
+     opacity: 0;
+     transition-property: transform, opacity;
+}
+
+.toggleButtonIconExpand {
+     transform:rotate(135deg);
+}
+
+.floatingMenuItem.itemButton.creatingButtonExpand {
+    transform:translate(-5rem,-0);
+    opacity: 1;
+}
+
+.floatingMenuItem.itemButton.uploadingButtonExpand {
+    transform:translate(-3.54rem,-3.54rem);
+    opacity: 1;
+}
+
+.floatingMenuItem.itemButton.settingButtonExpand {
+    transform:translate(-0,-5rem);
+    opacity: 1;
+}
+
+.floatingButtonTransitionDuration{
+    transition-duration: 0.3s;
+}

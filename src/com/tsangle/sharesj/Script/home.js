@@ -12,7 +12,7 @@
     var uploadingSpeedDiv = $("#uploadingSpeedDiv");
     var writingSpeedDiv = $("#writingSpeedDiv");
     var fileListTableBody = $("#FileListTableBody");
-    var navbarCollapse = $("#navbarCollapse");
+    var mainNavbar = $(".mainNavbar");
     var alertModal = $("#alertModal");
     var alertModalBody = $("#alertModalBody");
     var fileModal = $("#fileModal");
@@ -22,8 +22,9 @@
     var fileListSpinner = $("#fileListSpinner");
     var previousFileButton = $("#previousFileButton");
     var nextFileButton = $("#nextFileButton");
-    var floatingButton = $("#floatingButton");
-    var floatingButtonIcon = $("#floatingButtonIcon");
+    var floatingMenuContainer = $(".floatingMenuContainer");
+    var toggleButton = $("#toggleButton");
+    var toggleButtonIcon = $("#toggleButtonIcon");
     var creatingButton = $("#creatingButton");
     var uploadingButton = $("#uploadingButton");
     var settingButton = $("#settingButton");
@@ -32,12 +33,38 @@
     var acceptSettingButton = $("#acceptSettingButton");
     var cancelSettingButton = $("#cancelSettingButton");
     var pathDropdownMenu = $("#pathDropdownMenu");
+    var navDropdown = $("#navDropdown");
     var currentFolderNameElement = $("#currentFolderNameElement");
     var dropdownIcon = $("#dropdownIcon");
+    var navDropdownMask = $("#navDropdownMask");
+    var floatingMenuMask = $("#floatingMenuMask");
     var body = $("body");
+    var shownModalCount = 0;
     var fileUploader;
     var filenameList;
     var currentFileIndex;
+
+    $('.modal').on('show.bs.modal', function (e) {
+        body.css("overflow-y", "hidden");
+        shownModalCount++;
+    });
+
+    $('.modal').on('hide.bs.modal', function (e) {
+        shownModalCount--;
+        if (shownModalCount===0){
+            body.css("overflow-y", "");
+        }
+    });
+
+    navDropdown.on('show.bs.dropdown', function () {
+        navDropdownMask.show();
+        mainNavbar.css("z-index", "1000");
+    });
+
+    navDropdown.on('hide.bs.dropdown', function () {
+        navDropdownMask.hide();
+        mainNavbar.css("z-index", "");
+    });
 
     var resetFileModalBody = function(){
         var video = document.getElementById("fileModalVideo");
@@ -418,35 +445,43 @@
         }
     });
 
-    var switchFloatingButton = function(){
-        if(floatingButtonIcon.hasClass("floatingButtonIconExpand")){
-            floatingButtonIcon.removeClass("floatingButtonIconExpand");
+    var toggleFloatingMenu = function(){
+        if(toggleButtonIcon.hasClass("toggleButtonIconExpand")){
+            toggleButtonIcon.removeClass("toggleButtonIconExpand");
             creatingButton.removeClass("creatingButtonExpand");
             uploadingButton.removeClass("uploadingButtonExpand");
             settingButton.removeClass("settingButtonExpand");
+            floatingMenuMask.hide();
+            floatingMenuContainer.css("z-index", "");
         }else {
-            floatingButtonIcon.addClass("floatingButtonIconExpand");
+            toggleButtonIcon.addClass("toggleButtonIconExpand");
             creatingButton.addClass("creatingButtonExpand");
             uploadingButton.addClass("uploadingButtonExpand");
             settingButton.addClass("settingButtonExpand");
+            floatingMenuMask.show();
+            floatingMenuContainer.css("z-index", "1000");
         }
     };
 
-    floatingButton.click(function(){
-        switchFloatingButton();
+    floatingMenuMask.click(function(){
+        toggleFloatingMenu();
+    });
+
+    toggleButton.click(function(){
+        toggleFloatingMenu();
     });
 
     creatingButton.click(function(){
-        switchFloatingButton();
+        toggleFloatingMenu();
     });
 
     uploadingButton.click(function(){
-        switchFloatingButton();
+        toggleFloatingMenu();
         uploadingModal.modal("show");
     });
 
     settingButton.click(function(){
-        switchFloatingButton();
+        toggleFloatingMenu();
         settingModal.modal("show");
     });
 
