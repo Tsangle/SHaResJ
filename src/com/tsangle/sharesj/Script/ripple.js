@@ -1,4 +1,4 @@
-$(".rippleDarkEnable").mousedown(function (e) {
+$(".rippleDarkEnable").click(function (e) {
     $(".rippleDark").remove();
     var posX = $(this).offset().left;
     var posY = $(this).offset().top;
@@ -19,7 +19,7 @@ $(".rippleDarkEnable").mousedown(function (e) {
         left: x + 'px'
     }).addClass("rippleEffect");
 });
-$(".rippleLightEnable").mousedown(function (e) {
+$(".rippleLightEnable").click(function (e) {
     $(".rippleLight").remove();
     var posX = $(this).offset().left;
     var posY = $(this).offset().top;

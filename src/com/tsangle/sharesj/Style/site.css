@@ -14,7 +14,7 @@
 }
 
 body {
-    padding-top: 4rem;
+    padding-top: 4.2rem;
     padding-bottom: 1rem;
     width:100vw;
     overflow-x:hidden;
@@ -46,11 +46,19 @@ body {
 }
 
 .folderIcon {
-    color: #efe065;
+    color: rgb(240, 225, 100);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .fileIcon {
-    color: #4f4f4f;
+    color: rgb(190, 190, 190);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .entryTable {
@@ -99,8 +107,30 @@ body {
     transform: translate(-50%, -50%);
 }
 
+.verticalCenter{
+    position:absolute;
+    top:50%;
+    transform: translate(0, -50%);
+};
+
 .modal-backdrop{
     background-color: transparent;
+}
+
+.entryIconCard{
+    vertical-align: top;
+    background-color: rgb(245, 245, 245);
+    border: none;
+    border-radius: .5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.entryIconCardBody{
+    line-height: 100%;
+    font-size: 1.3rem;
+    width: 2.5rem;
+    height: 2.5rem;
 }
 
 .floatingButton{

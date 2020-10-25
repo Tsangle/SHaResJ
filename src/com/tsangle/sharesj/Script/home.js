@@ -38,6 +38,9 @@
     var dropdownIcon = $("#dropdownIcon");
     var navDropdownMask = $("#navDropdownMask");
     var floatingMenuMask = $("#floatingMenuMask");
+    var folderNumberElement = $("#folderNumberElement");
+    var fileNumberElement = $("#fileNumberElement");
+    var fileModalLabel = $("#fileModalLabel");
     var body = $("body");
     var shownModalCount = 0;
     var fileUploader;
@@ -342,16 +345,15 @@
                 fileListSpinner.hide();
                 var fileSystemEntries = data.split("|");
                 filenameList = [];
+                var folderCount = 0;
                 for (var index = 0; index < fileSystemEntries.length - 1; index++) {
                     var entryInfo = fileSystemEntries[index].split("*");
                     var dateTime = entryInfo[1].split(" ");
                     if (entryInfo[2] === "") {
-                        $("<tr class='entryTableFolder'><td><div class='float-left mr-1' style='width:1rem;text-align:center;'>" +
-                            "<i class='folderIcon fas fa-folder' aria-hidden='true'></i></div>" +
-                            entryInfo[0] + "</td><td><div style='float:left;margin-right:10px;'>" +
-                            dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
-                            dateTime[1] + "</div></td><td>" +
-                            entryInfo[2] + "</td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                        $("<tr class='entryTableFolder' entryName=\"" + entryInfo[0] + "\"><td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='folderIcon fas fa-folder' aria-hidden='true'></i></div></div>" +
+                            "<div class='d-inline-block verticalCenter pb-1' style='max-width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;'>" + entryInfo[0] + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
+                            dateTime[0] + ", " + dateTime[1] + "</div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                        folderCount++;
                     } else {
                         var fileSizeDisplay = parseFloat(entryInfo[2]);
                         var unit = 'KB';
@@ -367,21 +369,20 @@
                                 }
                             }
                         }
-                        $("<tr class='entryTableFile'><td index='" + filenameList.length + "'><div class='float-left mr-1' style='width:1rem;text-align:center;'>" +
-                            "<i class='fileIcon far fa-file-alt' aria-hidden='true'></i></div>" +
-                            entryInfo[0] + "</td><td><div style='float:left;margin-right:10px;'>" +
-                            dateTime[0] + "</div><div class='d-none d-md-block' style='float:left;'>" +
-                            dateTime[1] + "</div></td><td><div style='float:left;'>" +
-                            Math.round(fileSizeDisplay) + " " + unit + "</div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                        $("<tr class='entryTableFile' index='" + filenameList.length + "' entryName=\"" + entryInfo[0] + "\"><td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='fileIcon fas fa-file-alt' aria-hidden='true'></i></div></div>" +
+                            "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);p'><div class='text-truncate' style='width:100%;'>" + entryInfo[0] + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
+                            dateTime[0] + ", " + dateTime[1] + "<div class='float-right'>" + fileSizeDisplay.toFixed(2) + " " + unit + "</div></div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                         filenameList.push(entryInfo[0]);
                     }
                 }
+                folderNumberElement.text(folderCount);
+                fileNumberElement.text(filenameList.length);
                 $(function () {
                     $("[data-toggle='tooltip']").tooltip();
                 });
 
                 $("tr.entryTableFolder").click(function () {
-                    folderName = $(this).children("td").first().text();
+                    folderName = $(this).attr("entryName");
                     if (sessionStorage.getItem("path") === "") {
                         getFileSystemEntry(folderName);
                     } else {
@@ -390,8 +391,8 @@
                 });
 
                 $("tr.entryTableFile").click(function () {
-                    currentFileIndex = Number($(this).children("td").first().attr("index"));
-                    showFileInfo($(this).children("td").first().text());
+                    currentFileIndex = Number($(this).attr("index"));
+                    showFileInfo($(this).attr("entryName"));
                 });
             } else {
                 alertMessage(data, "Error", "danger");
@@ -403,28 +404,28 @@
         getFileSystemEntry(sessionStorage.getItem("path"));
     };
     var showFileInfo = function (fileName) {
-        previousFileButton.css("opacity", 1);
-        nextFileButton.css("opacity", 1);
+        fileModalLabel.text(fileName);
         if (currentFileIndex===0){
-            previousFileButton.css("opacity", 0);
+            previousFileButton.hide();
+        }else{
+            previousFileButton.show();
         }
         if(currentFileIndex===filenameList.length-1){
-            nextFileButton.css("opacity", 0);
+            nextFileButton.hide();
+        }else{
+            nextFileButton.show();
         }
         var fileNameArray = fileName.split(".");
         var extendName = fileNameArray[fileNameArray.length - 1];
         if (extendName === "mp4" || extendName === "MP4") {
             fileModalBody.html("<video id='fileModalVideo' width='100%' height='auto'controls preload='none'>" +
-                "<source src='/Video/PlayVideo/" + encodeURIComponent(sessionStorage.getItem("path") + "/" + fileName) + "' type='video/mp4'></video>" +
-                "<div id='selectedFileName' class='fileInfo text-break'>" + fileName + "</div>");
+                "<source src='/Video/PlayVideo/" + encodeURIComponent(sessionStorage.getItem("path") + "/" + fileName) + "' type='video/mp4'></video>");
         } else if (extendName === "JPG" || extendName === "PNG" || extendName === "GIF" ||
             extendName === "jpg" || extendName === "png" || extendName === "gif") {
-            fileModalBody.html("<img src='/Image/DisplayImage/" + encodeURIComponent(sessionStorage.getItem("path") + "/" + fileName) + "' class='img-thumbnail'>" +
-                "<div id='selectedFileName' class='fileInfo text-break'>" + fileName + "</div>");
-        }else {
+            fileModalBody.html("<img src='/Image/DisplayImage/" + encodeURIComponent(sessionStorage.getItem("path") + "/" + fileName) + "' class='img-thumbnail' style='width:100%;'>");
+        } else {
             fileModalBody.html("<div class='fileInfo' style='font-size:90px;color:rgb(130, 130, 130);'>" +
-                "<span class='fas fa-file-alt' aria-hidden='true'></span></div>" +
-                "<div id='selectedFileName' class='fileInfo text-break'>" + fileName + "</div>");
+                "<i class='fas fa-file-alt' aria-hidden='true'></i></div>");
         }
         fileModal.modal("show");
     };

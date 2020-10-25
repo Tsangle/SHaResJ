@@ -74,7 +74,7 @@
             <div class="modal-body">
                 <form>
                     <div class="form-group">
-                        <label for="threadNumberSelect">Thread Number</label>
+                        <label for="threadNumberSelect">Max Thread Number for uploading</label>
                         <select class="custom-select" id="threadNumberSelect">
                             <option>1</option>
                             <option>2</option>
@@ -94,21 +94,23 @@
 </div>
 
 <div class="modal fade" id="fileModal" tabindex="-1" role="dialog" aria-labelledby="fileModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content shadow">
             <div class="modal-header">
-                <h5 class="modal-title" id="fileModalLabel"><i class="fas fa-grip-lines" style="color:rgb(150,150,150)"></i></h5>
+                <h5 class="modal-title text-wrap text-break" id="fileModalLabel"></h5>
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
             </div>
             <div class="modal-body row">
-                <div class="col px-0" id="previousFileButton">
-                    <i class="fas fa-chevron-left center" style="color:rgb(200,200,200);"></i>
+                <div class="col px-0">
+                    <div id="previousFileButton" role="button" style="width:100%;height:100%;">
+                        <i class="fas fa-chevron-left center" style="color:rgb(200,200,200);"></i>
+                    </div>
                 </div>
-                <div class="col-10 px-0" id="fileModalBody">
-
-                </div>
-                <div class="col px-0" id="nextFileButton">
-                    <i class="fas fa-chevron-right center" style="color:rgb(200,200,200);"></i>
+                <div id="fileModalBody" class="col-10 px-0"></div>
+                <div class="col px-0">
+                    <div id="nextFileButton" role="button" style="width:100%;height:100%;">
+                        <i class="fas fa-chevron-right center" style="color:rgb(200,200,200);"></i>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -138,7 +140,7 @@
             <div id="navDropdown" class="dropdown">
                 <div class="text-nowrap rippleDarkEnable py-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button">
                     <div class="d-inline-block" style="vertical-align:top;">
-                        <div id="currentFolderNameElement" class="text-truncate d-inline-block" style="font-size:1.15rem;font-weight:500;line-height:110%;">Home</div>
+                        <div id="currentFolderNameElement" class="text-truncate d-inline-block" style="font-size:1.15rem;font-weight:500;">Home</div>
                         <div style="font-size:.7rem;color:rgb(150,150,150);line-height:100%;">
                             Folder:<span id="folderNumberElement" style="margin-left:.25rem;margin-right:.5rem;">0</span>
                             File:<span id="fileNumberElement" style="margin-left:.25rem;">0</span>
@@ -163,13 +165,6 @@
 
 <div class="container px-3">
     <table class="table table-hover entryTable">
-        <thead>
-        <tr>
-            <th width="50%">name</th>
-            <th width="30%">date</th>
-            <th width="20%">size</th>
-        </tr>
-        </thead>
         <tbody id="FileListTableBody"></tbody>
     </table>
     <div class="d-flex justify-content-center">
