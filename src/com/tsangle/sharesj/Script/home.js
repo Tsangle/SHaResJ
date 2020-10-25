@@ -419,10 +419,10 @@
         var extendName = fileNameArray[fileNameArray.length - 1];
         if (extendName === "mp4" || extendName === "MP4") {
             fileModalBody.html("<video id='fileModalVideo' width='100%' height='auto'controls preload='none'>" +
-                "<source src='/Video/PlayVideo/" + encodeURIComponent(sessionStorage.getItem("path") + "/" + fileName) + "' type='video/mp4'></video>");
+                "<source src=\"/Video/PlayVideo/" + encodeURIComponent(sessionStorage.getItem("path") + "/" + fileName) + "\" type='video/mp4'></video>");
         } else if (extendName === "JPG" || extendName === "PNG" || extendName === "GIF" ||
             extendName === "jpg" || extendName === "png" || extendName === "gif") {
-            fileModalBody.html("<img src='/Image/DisplayImage/" + encodeURIComponent(sessionStorage.getItem("path") + "/" + fileName) + "' class='img-thumbnail' style='width:100%;'>");
+            fileModalBody.html("<img src=\"/Image/DisplayImage/" + encodeURIComponent(sessionStorage.getItem("path") + "/" + fileName) + "\" class='img-thumbnail' style='width:100%;'>");
         } else {
             fileModalBody.html("<div class='fileInfo' style='font-size:90px;color:rgb(130, 130, 130);'>" +
                 "<i class='fas fa-file-alt' aria-hidden='true'></i></div>");
