@@ -264,9 +264,9 @@
     deleteButton.click(function (event) {
         if (deleteButton.attr("aria-describedby")!==undefined){
             deleteButton.tooltip('hide');
-            var fullPath = sessionStorage.getItem("path") + "/" + $("#selectedFileName").text();
+            var fullPath = sessionStorage.getItem("path") + "/" + fileModalLabel.text();
             if (sessionStorage.getItem("path") === "") {
-                fullPath = $("#selectedFileName").text();
+                fullPath = fileModalLabel.text();
             }
             $.post("/File/DeleteFile", fullPath, function (data) {
                 if (data.slice(0, 1) !== "#") {
@@ -285,9 +285,9 @@
         deleteButton.tooltip('hide');
     });
     downloadButton.click(function () {
-        var fullPath = sessionStorage.getItem("path") + "/" + $("#selectedFileName").text();
+        var fullPath = sessionStorage.getItem("path") + "/" + fileModalLabel.text();
         if (sessionStorage.getItem("path") === "") {
-            fullPath = $("#selectedFileName").text();
+            fullPath = fileModalLabel.text();
         }
         var downloadForm = $("<form>");
         downloadForm.attr('style', 'display:none');

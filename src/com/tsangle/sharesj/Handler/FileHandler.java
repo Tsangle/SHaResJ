@@ -80,11 +80,14 @@ public class FileHandler extends BaseRequestHandler {
     private void SetFileInfo(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String[] strDataArray = strDataContent.split("\\|",4);
-        String filePath = ServiceNode.GetInstance().GetRootPath() + strDataArray[0];
+        String filePath = GenerateRealPath(strDataArray[0], false);
         String fileName = strDataArray[1];
         long fileSize = Long.parseLong(strDataArray[2]);
-        File dir = new File(filePath);
-        if(dir.exists())
+        if(filePath.equals(""))
+        {
+            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + filePath + "]");
+        }
+        else
         {
             FileEntity container=new FileEntity(filePath+"/"+fileName,fileSize);
             Random random=new Random();
@@ -95,10 +98,6 @@ public class FileHandler extends BaseRequestHandler {
                 fileEntityDictionary.put(key,container);
             }
             HandleResponseMessage(requestSocket, "text/plain",String.valueOf(key));
-        }
-        else
-        {
-            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + filePath + "]");
         }
     }
 
@@ -181,9 +180,9 @@ public class FileHandler extends BaseRequestHandler {
                     long currentTime=new Date().getTime();
                     long currentTimeStamp=currentTime-fileEntity.GetCreatedTime();
                     double timeGap=(double) (currentTimeStamp-lastTimeStamp);
-                    double uploadingSpeed=0;
+                    double uploadingSpeed;
                     String uploadingSpeedString="0 B/s";
-                    double writingSpeed=0;
+                    double writingSpeed;
                     String writingSpeedString="0 B/s";
                     if(timeGap>1000){
                         double newlyReadSize=(double)fileEntity.GetNewlyReadSize();
@@ -237,9 +236,13 @@ public class FileHandler extends BaseRequestHandler {
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String logicPath= URLDecoder.decode(strDataContent,StandardCharsets.UTF_8).split("=",2)[1];
         String path = GenerateRealPath(logicPath,true);
-        File targetFile=new File(path);
-        if (targetFile.exists())
+        if (path.equals(""))
         {
+            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + logicPath + "]");
+        }
+        else
+        {
+            File targetFile=new File(path);
             FileInputStream inputStream=new FileInputStream(path);
             String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
                     "Content-Length:"+targetFile.length()+System.lineSeparator()+
@@ -254,26 +257,23 @@ public class FileHandler extends BaseRequestHandler {
             outputStream.close();
             requestSocket.Close();
         }
-        else
-        {
-            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + path + "]");
-        }
     }
 
     private void DeleteFile(RequestSocket requestSocket) throws Exception{
-        String path = GenerateRealPath(new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8),true);
-        File targetFile=new File(path);
-        if (targetFile.exists())
+        String logicPath = new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
+        String path = GenerateRealPath(logicPath,true);
+        if (path.equals(""))
         {
+            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + logicPath + "]");
+        }
+        else
+        {
+            File targetFile=new File(path);
             boolean result=targetFile.delete();
             if(result)
                 HandleResponseMessage(requestSocket, "text/plain","Success!");
             else
-                HandleErrorMessage(requestSocket,"Fail to delete the file: [" + path + "]");
-        }
-        else
-        {
-            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + path + "]");
+                HandleErrorMessage(requestSocket,"Fail to delete the file: [" + logicPath + "]");
         }
     }
 

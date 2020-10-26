@@ -18,10 +18,15 @@ public class VideoHandler extends BaseRequestHandler{
             if(requestSocket.CheckUrlArrayFormat(3)){
                 switch (requestSocket.GetUrlArray()[1]){
                     case "PlayVideo":
-                        String videoPath = FileHandler.GenerateRealPath(URLDecoder.decode(requestSocket.GetUrlArray()[2],"UTF-8"),true);
-                        File videoFile=new File(videoPath);
-                        if (videoFile.exists())
+                        String logicPath = URLDecoder.decode(requestSocket.GetUrlArray()[2],"UTF-8");
+                        String videoPath = FileHandler.GenerateRealPath(logicPath,true);
+                        if (videoPath.equals(""))
                         {
+                            HandleErrorMessage(requestSocket, "Cannot find the given file: [" + logicPath + "]");
+                        }
+                        else
+                        {
+                            File videoFile=new File(videoPath);
                             String rangeString=requestSocket.GetRange();
                             FileInputStream inputStream=new FileInputStream(videoFile);
                             if(rangeString!=null&&!rangeString.isEmpty()){
@@ -69,10 +74,6 @@ public class VideoHandler extends BaseRequestHandler{
                                 requestSocket.Close();
                             }
                             inputStream.close();
-                        }
-                        else
-                        {
-                            HandleErrorMessage(requestSocket, "Cannot find the given file: [" + videoPath + "]");
                         }
                         break;
                     default:
