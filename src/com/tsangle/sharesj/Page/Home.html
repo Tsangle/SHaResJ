@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -114,8 +114,8 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button id="downloadButton" type="button" class="btn btn-secondary">Download</button>
-                <button id="deleteButton" type="button" class="btn btn-outline-danger" data-toggle="tooltip" data-trigger="manual" data-placement="top" title="Click again to confirm."><i class="far fa-trash-alt"></i></button>
+                <button id="downloadButton" type="button" class="btn btn-secondary"><i class="fas fa-download"></i></button>
+                <button id="deleteButton" type="button" class="btn btn-outline-danger"><i class="far fa-trash-alt"></i></button>
             </div>
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
@@ -134,13 +134,32 @@
         </div><!-- /.modal-content -->
     </div><!-- /.modal -->
 </div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered alertDialog modal-dialog-scrollable">
+        <div class="modal-content shadow">
+            <div class="modal-header py-2">
+                <h5 class="modal-title" id="confirmModalLabel"><i class="fas fa-exclamation-circle mr-2" style="color:rgb(150,150,150)"></i><span id="confirmModalTitle" class="d-inline-block"></span></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            </div>
+            <div id="confirmModalBody" class="modal-body">
+
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn btn-secondary btn-sm" id="confirmButton">Confirm</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="cancelButton">Cancel</button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
 <div class="fixedContainer">
     <nav class="navbar navbar-light mainNavbar bg-light px-0 py-1 fixedItem shadow-sm" role="navigation">
         <div class="container px-3">
             <div id="navDropdown" class="dropdown">
                 <div class="text-nowrap rippleDarkEnable py-1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button">
                     <div class="d-inline-block" style="vertical-align:top;">
-                        <div id="currentFolderNameElement" class="text-truncate d-inline-block" style="font-size:1.15rem;font-weight:500;">Home</div>
+                        <div id="currentFolderNameElement" class="text-truncate d-inline-block" style="font-size:1.15rem;font-weight:500;">{NodeName}</div>
                         <div style="font-size:.7rem;color:rgb(150,150,150);line-height:100%;">
                             Folder:<span id="folderNumberElement" style="margin-left:.25rem;margin-right:.5rem;">0</span>
                             File:<span id="fileNumberElement" style="margin-left:.25rem;">0</span>
@@ -168,14 +187,8 @@
         <tbody id="FileListTableBody"></tbody>
     </table>
     <div class="d-flex justify-content-center">
-        <div id="fileListSpinner" class="spinner-border text-secondary" role="status" style="display:none;">
-            <span class="sr-only">Loading...</span>
-        </div>
+        <div id="fileListSpinner" class="spinner-border text-secondary" role="status" style="display:none;"></div>
     </div>
-    <hr />
-    <footer>
-        <p>&copy; SHaRes</p>
-    </footer>
 </div>
 <script src="/Resource/Script/jquery-3.4.1.min.js"></script>
 <script src="/Resource/Script/bootstrap.bundle.min.js"></script>

@@ -53,8 +53,8 @@ public class RequestSocket{
                             case "POST":
                                 requestType=requestArray[0];
                                 if(requestArray[1].equals("/favicon.ico")){
-                                    urlArray=new String[]{"Resource","Img","shares.ico"};
-                                    url="/Resource/Img/shares.ico";
+                                    urlArray=new String[]{"Resource","Icon","shares.ico"};
+                                    url="/Resource/Icon/shares.ico";
                                 }else if(requestArray[1].equals("/")){
                                     urlArray=new String[]{"Resource","Page","Home.html"};
                                     url="/Resource/Page/Home.html";

@@ -41,11 +41,17 @@
     var folderNumberElement = $("#folderNumberElement");
     var fileNumberElement = $("#fileNumberElement");
     var fileModalLabel = $("#fileModalLabel");
+    var confirmModal = $("#confirmModal");
+    var confirmModalBody = $("#confirmModalBody");
+    var confirmButton = $("#confirmButton");
+    var cancelButton = $("#cancelButton");
+    var confirmModalTitle = $("#confirmModalTitle");
     var body = $("body");
     var shownModalCount = 0;
     var fileUploader;
     var filenameList;
     var currentFileIndex;
+    var serviceNodeName = currentFolderNameElement.text();
 
     $('.modal').on('show.bs.modal', function (e) {
         body.css("overflow-y", "hidden");
@@ -89,7 +95,7 @@
     $( window ).resize(function() {
         setMaxWidthForNav();
     });
-    var alertMessage = function (message, type = "Info", style = "info") {
+    var showAlertMessage = function (message, type = "Info", style = "info") {
         $("<div class='alert alert-" + style + " alert-dismissable fade show text-break' role='alert'>" +
             "<strong>" + type + ": </strong>" + message +
             "</div>").appendTo(alertModalBody).hide().fadeIn();
@@ -98,6 +104,26 @@
     alertModal.on('hidden.bs.modal', function () {
         alertModalBody.html("");
     });
+    var showConfirmationDialog = function (title, message, confirmCallback) {
+        confirmModalTitle.html(title);
+        confirmModalBody.html(message);
+        confirmButton.click(confirmCallback);
+        confirmButton.click(function(){
+            confirmModal.modal("hide");
+        });
+        confirmModal.modal("show");
+    };
+    confirmModal.on('hidden.bs.modal', function () {
+        confirmModalTitle.html("");
+        confirmModalBody.html("");
+    });
+    confirmModal.on('hide.bs.modal', function(){
+        confirmButton.off();
+    });
+    cancelButton.click(function(){
+        confirmModal.modal("hide");
+    });
+    
     var initUploadingModal = function () {
         selectFileDiv.hide();
         uploadingProgressBar.css("width", "0%");
@@ -106,7 +132,7 @@
         writingSpeedDiv.html("0 B/s");
         uploadingProgressDiv.show();
         startUploadingButton.attr("disabled", true);
-        startUploadingButton.text("Uploading...")
+        startUploadingButton.html("<span class='spinner-border spinner-border-sm' role='status'></span>")
     }
     var resetUploadingModal = function () {
         fileUploader = undefined;
@@ -120,7 +146,7 @@
         uploadingSpeedDiv.html("0 B/s");
         writingSpeedDiv.html("0 B/s");
         startUploadingButton.attr("disabled", false);
-        startUploadingButton.text("Upload")
+        startUploadingButton.html("Upload")
     };
     var notifyUploadingResult = function (uploadingProgress, uploadingSpeed, writingProgress, writingSpeed) {
         uploadingProgressBar.css("width", uploadingProgress + "%");
@@ -137,7 +163,7 @@
         }
     };
     var FileUploader = class {
-        constructor(file, path, fileName, threadCount, notifyFunc) {
+        constructor(file, path, fileName, threadCount) {
             this.file = file;
             this.path = path;
             this.fileName = fileName;
@@ -148,7 +174,6 @@
                 this.chunkSize = 1;
                 this.threadCount = file.size;
             }
-            this.notifyFunc = notifyFunc;
             this.serverCacheID = 0;
             this.isCanceled = false;
             this.uploadingProgress = 0;
@@ -167,7 +192,7 @@
                     thisObj._checkUploadingProgress(thisObj, 0, "0 B/s", "0 B/s");
                 } else {
                     resetUploadingModal();
-                    alertMessage(data, "Error", "danger");
+                    showAlertMessage(data, "Error", "danger");
                 }
             });
         }
@@ -182,9 +207,9 @@
                 $.post("/File/CancelUploading", thisObj.serverCacheID, function (data) {
                     resetUploadingModal();
                     if (data.slice(0, 1) !== "#") {
-                        alertMessage("Uploading task canceled!", "Info", "success");
+                        showAlertMessage("Uploading task canceled!", "Info", "success");
                     } else {
-                        alertMessage(data, "Error", "danger");
+                        showAlertMessage(data, "Error", "danger");
                     }
                 });
             }
@@ -204,18 +229,18 @@
                         uploadingSpeed = lastUploadingSpeed;
                         writingSpeed = lastWritingSpeed;
                     }
-                    thisObj.notifyFunc(thisObj.uploadingProgress, uploadingSpeed, thisObj.writingProgress, writingSpeed);
+                    notifyUploadingResult(thisObj.uploadingProgress, uploadingSpeed, thisObj.writingProgress, writingSpeed);
                     if(status===0){
                         thisObj._checkUploadingProgress(thisObj, timeStamp, uploadingSpeed, writingSpeed);
                     }else{
                         resetUploadingModal();
-                        alertMessage("[" + thisObj.fileName + "] uploaded!", "Info", "success");
+                        showAlertMessage("<u>" + thisObj.fileName + "</u> uploaded!", "Info", "success");
                         refreshFileSystemEntryList();
                     }
                 } else {
                     if(!thisObj.isCanceled && !thisObj.errorDetected){
                         thisObj.errorDetected = true;
-                        alertMessage(data, "Error", "danger");
+                        showAlertMessage(data, "Error", "danger");
                         thisObj._cancelUploadingImpl(thisObj);
                     }
                 }
@@ -234,7 +259,7 @@
             httpRequest.open("POST", "/File/UploadFileChunk/"+thisObj.serverCacheID+"&"+index * thisObj.chunkSize);
             httpRequest.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
             httpRequest.onerror = function () {
-                alertMessage("Unknown error encountered while uploading Chunk #" + index + " of [" + thisObj.fileName + "]", "Error", "danger");
+                showAlertMessage("Unknown error encountered while uploading Chunk #" + index + " of [" + thisObj.fileName + "]", "Error", "danger");
                 thisObj._cancelUploadingImpl(thisObj);
             };
             httpRequest.send(currentChunk);
@@ -248,10 +273,10 @@
             initUploadingModal()
             var file = fileInput[0].files[0];
             var uploadingThreadCount = Number(localStorage.getItem("threadNumber"));
-            fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), uploadingThreadCount, notifyUploadingResult);
+            fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), uploadingThreadCount);
             fileUploader.startUploading();
         } else {
-            alertMessage("Please select a file!", "Warning", "warning");
+            showAlertMessage("Please select a file!", "Warning", "warning");
         }
     });
     cancelUploadingButton.click(function () {
@@ -261,9 +286,8 @@
             resetUploadingModal();
         }
     });
-    deleteButton.click(function (event) {
-        if (deleteButton.attr("aria-describedby")!==undefined){
-            deleteButton.tooltip('hide');
+    deleteButton.click(function () {
+        showConfirmationDialog("Delete File?", "<u>" + fileModalLabel.text()+ "</u> will be deleted.", function(){
             var fullPath = sessionStorage.getItem("path") + "/" + fileModalLabel.text();
             if (sessionStorage.getItem("path") === "") {
                 fullPath = fileModalLabel.text();
@@ -273,38 +297,34 @@
                     fileModal.modal("hide");
                     refreshFileSystemEntryList();
                 } else {
-                    alertMessage(data, "Error", "danger");
+                    showAlertMessage(data, "Error", "danger");
                 }
             });
-        }else{
-            deleteButton.tooltip('show');
-        }
-        event.stopPropagation();
-    });
-    fileModal.click(function(){
-        deleteButton.tooltip('hide');
+        });
     });
     downloadButton.click(function () {
-        var fullPath = sessionStorage.getItem("path") + "/" + fileModalLabel.text();
-        if (sessionStorage.getItem("path") === "") {
-            fullPath = fileModalLabel.text();
-        }
-        var downloadForm = $("<form>");
-        downloadForm.attr('style', 'display:none');
-        downloadForm.attr('target', '');
-        downloadForm.attr('method', 'post');
-        downloadForm.attr('action', "/File/DownloadFile");
-        downloadForm.attr('target', '');
+        showConfirmationDialog("Download File?", "<u>" + fileModalLabel.text() + "</u> will be downloaded.", function(){
+            var fullPath = sessionStorage.getItem("path") + "/" + fileModalLabel.text();
+            if (sessionStorage.getItem("path") === "") {
+                fullPath = fileModalLabel.text();
+            }
+            var downloadForm = $("<form>");
+            downloadForm.attr('style', 'display:none');
+            downloadForm.attr('target', '');
+            downloadForm.attr('method', 'post');
+            downloadForm.attr('action', "/File/DownloadFile");
+            downloadForm.attr('target', '');
 
-        var nameInput = $('<input>');
-        nameInput.attr('type', 'hidden');
-        nameInput.attr('name', 'fileName');
-        nameInput.attr('value', fullPath);
+            var nameInput = $('<input>');
+            nameInput.attr('type', 'hidden');
+            nameInput.attr('name', 'fileName');
+            nameInput.attr('value', fullPath);
 
-        $('body').append(downloadForm);
-        downloadForm.append(nameInput);
-        downloadForm.submit();
-        downloadForm.remove();
+            $('body').append(downloadForm);
+            downloadForm.append(nameInput);
+            downloadForm.submit();
+            downloadForm.remove();
+        });
     });
     fileInput.change(function () {
         if (fileInput[0].files.length > 0) {
@@ -321,9 +341,9 @@
             currentFolderNameElement.html(pathNodeArray[pathNodeArray.length-1]);
         } else {
             pathNodeArray = [];
-            currentFolderNameElement.html("Home");
+            currentFolderNameElement.html(serviceNodeName);
         }
-        pathDropdownMenu.html("<span class='dropdown-item text-truncate pathDropdownMenuItem' style='padding-left:1rem;'><i class='fas fa-hdd' style='color:rgb(150,150,150);margin-right:.5rem;'></i>Home</span>")
+        pathDropdownMenu.html("<span class='dropdown-item text-truncate pathDropdownMenuItem' style='padding-left:1rem;'><i class='fas fa-hdd' style='color:rgb(150,150,150);margin-right:.5rem;'></i>" + serviceNodeName + "</span>")
         for(var index = 0; index < pathNodeArray.length; index++) {
             pathDropdownMenu.append("<span class='dropdown-item text-truncate pathDropdownMenuItem' style='padding-left:" + (1 + 0.5*(index + 1)) + "rem;'><i class='far fa-folder' style='color:rgb(150,150,150);margin-right:.5rem;'></i>" + pathNodeArray[index] + "</span>");
         }
@@ -395,7 +415,7 @@
                     showFileInfo($(this).attr("entryName"));
                 });
             } else {
-                alertMessage(data, "Error", "danger");
+                showAlertMessage(data, "Error", "danger");
             }
 
         });

@@ -42,7 +42,6 @@ body {
     max-width:19rem;
     margin-left: auto;
     margin-right: auto;
-    z-index: 1060;
 }
 
 .folderIcon {
@@ -165,4 +164,8 @@ body {
 .show > .dropdown-menu.fade {
     pointer-events: auto;
     opacity: 1;
+}
+
+.table td, .table th {
+    border-bottom: 1px solid #dee2e6;
 }
