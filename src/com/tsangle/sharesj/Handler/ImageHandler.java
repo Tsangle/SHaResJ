@@ -18,18 +18,11 @@ public class ImageHandler extends BaseRequestHandler {
                     case "DisplayImage":
                         String logicPath = URLDecoder.decode(requestSocket.GetUrlArray()[2], StandardCharsets.UTF_8);
                         String imagePath = FileHandler.GenerateRealPath(logicPath,true);
-                        if (imagePath.equals(""))
-                        {
-                            HandleErrorMessage(requestSocket, "Cannot find the given file: [" + logicPath + "]");
-                        }
-                        else
-                        {
-                            File imageFile=new File(imagePath);
-                            FileInputStream inputStream=new FileInputStream(imageFile);
-                            byte[] imageData=inputStream.readAllBytes();
-                            inputStream.close();
-                            HandleResponseData(requestSocket,"image/*",imageData);
-                        }
+                        File imageFile=new File(imagePath);
+                        FileInputStream inputStream=new FileInputStream(imageFile);
+                        byte[] imageData=inputStream.readAllBytes();
+                        inputStream.close();
+                        HandleResponseData(requestSocket,"image/*",imageData);
                         break;
                     default:
                         HandleErrorMessage(requestSocket,"Cannot find the given task: [" + requestSocket.GetUrlArray()[1] + "]");

@@ -46,6 +46,10 @@
     var confirmButton = $("#confirmButton");
     var cancelButton = $("#cancelButton");
     var confirmModalTitle = $("#confirmModalTitle");
+    var creatingFolderModal = $("#creatingFolderModal");
+    var createFolderButton = $("#createFolderButton");
+    var cancelCreatingButton = $("#cancelCreatingButton");
+    var folderNameInput = $("#folderNameInput");
     var body = $("body");
     var shownModalCount = 0;
     var fileUploader;
@@ -286,14 +290,34 @@
             resetUploadingModal();
         }
     });
+    createFolderButton.click(function(){
+        if (folderNameInput.val() !== undefined && folderNameInput.val() !== null && folderNameInput.val() !== "") {
+            var folderInfo = sessionStorage.getItem("path") + "|" + folderNameInput.val();
+            $.post("/File/CreateFolder", folderInfo, function (data) {
+                if (data.slice(0, 1) !== "#") {
+                    showAlertMessage("<u>"+folderNameInput.val()+"</u> created!", "Info", "success");
+                    creatingFolderModal.modal("hide");
+                    refreshFileSystemEntryList();
+                } else {
+                    showAlertMessage(data, "Error", "danger");
+                }
+            });
+        } else {
+            showAlertMessage("Please input the folder name!", "Warning", "warning");
+        }
+    });
+    cancelCreatingButton.click(function(){
+        creatingFolderModal.modal("hide");
+    });
+    creatingFolderModal.on('hide.bs.modal', function (e) {
+        folderNameInput.val("");
+    });
     deleteButton.click(function () {
-        showConfirmationDialog("Delete File?", "<u>" + fileModalLabel.text()+ "</u> will be deleted.", function(){
+        showConfirmationDialog("Delete File?", "<u class='text-wrap text-break'>" + fileModalLabel.text()+ "</u> will be deleted.", function(){
             var fullPath = sessionStorage.getItem("path") + "/" + fileModalLabel.text();
-            if (sessionStorage.getItem("path") === "") {
-                fullPath = fileModalLabel.text();
-            }
             $.post("/File/DeleteFile", fullPath, function (data) {
                 if (data.slice(0, 1) !== "#") {
+                    showAlertMessage("<u>"+fileModalLabel.text()+"</u> deleted!", "Info", "success");
                     fileModal.modal("hide");
                     refreshFileSystemEntryList();
                 } else {
@@ -303,11 +327,8 @@
         });
     });
     downloadButton.click(function () {
-        showConfirmationDialog("Download File?", "<u>" + fileModalLabel.text() + "</u> will be downloaded.", function(){
+        showConfirmationDialog("Download File?", "<u class='text-wrap text-break'>" + fileModalLabel.text() + "</u> will be downloaded.", function(){
             var fullPath = sessionStorage.getItem("path") + "/" + fileModalLabel.text();
-            if (sessionStorage.getItem("path") === "") {
-                fullPath = fileModalLabel.text();
-            }
             var downloadForm = $("<form>");
             downloadForm.attr('style', 'display:none');
             downloadForm.attr('target', '');
@@ -335,16 +356,14 @@
     });
     var getFileSystemEntry = function (path) {
         sessionStorage.setItem("path", path);
-        var pathNodeArray;
+        var pathNodeArray = path.split("/");
         if (path !==""){
-            pathNodeArray = path.split("/");
             currentFolderNameElement.html(pathNodeArray[pathNodeArray.length-1]);
         } else {
-            pathNodeArray = [];
             currentFolderNameElement.html(serviceNodeName);
         }
         pathDropdownMenu.html("<span class='dropdown-item text-truncate pathDropdownMenuItem' style='padding-left:1rem;'><i class='fas fa-hdd' style='color:rgb(150,150,150);margin-right:.5rem;'></i>" + serviceNodeName + "</span>")
-        for(var index = 0; index < pathNodeArray.length; index++) {
+        for(var index = 1; index < pathNodeArray.length; index++) {
             pathDropdownMenu.append("<span class='dropdown-item text-truncate pathDropdownMenuItem' style='padding-left:" + (1 + 0.5*(index + 1)) + "rem;'><i class='far fa-folder' style='color:rgb(150,150,150);margin-right:.5rem;'></i>" + pathNodeArray[index] + "</span>");
         }
         $("span.pathDropdownMenuItem").click(function () {
@@ -403,11 +422,7 @@
 
                 $("tr.entryTableFolder").click(function () {
                     folderName = $(this).attr("entryName");
-                    if (sessionStorage.getItem("path") === "") {
-                        getFileSystemEntry(folderName);
-                    } else {
-                        getFileSystemEntry(sessionStorage.getItem("path") + "/" + folderName);
-                    }
+                    getFileSystemEntry(sessionStorage.getItem("path") + "/" + folderName);
                 });
 
                 $("tr.entryTableFile").click(function () {
@@ -426,14 +441,14 @@
     var showFileInfo = function (fileName) {
         fileModalLabel.text(fileName);
         if (currentFileIndex===0){
-            previousFileButton.hide();
+            previousFileButton.addClass("disabled");
         }else{
-            previousFileButton.show();
+            previousFileButton.removeClass("disabled");
         }
         if(currentFileIndex===filenameList.length-1){
-            nextFileButton.hide();
+            nextFileButton.addClass("disabled");
         }else{
-            nextFileButton.show();
+            nextFileButton.removeClass("disabled");
         }
         var fileNameArray = fileName.split(".");
         var extendName = fileNameArray[fileNameArray.length - 1];
@@ -494,6 +509,7 @@
 
     creatingButton.click(function(){
         toggleFloatingMenu();
+        creatingFolderModal.modal("show");
     });
 
     uploadingButton.click(function(){

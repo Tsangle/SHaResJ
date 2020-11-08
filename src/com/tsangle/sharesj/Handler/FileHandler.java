@@ -29,52 +29,44 @@ public class FileHandler extends BaseRequestHandler {
         chunkLength=5000000;
     }
 
-    static String GenerateRealPath(String logicPath, boolean isFile){
-        if(logicPath==null||logicPath.equals("")){
-            return ServiceNode.GetInstance().GetRootPath();
-        }else{
-            String path= ServiceNode.GetInstance().GetRootPath() + "/" + logicPath;
-            File file = new File(path);
-            if (file.exists()&&file.isFile()==isFile)
-            {
-                return path;
-            }
-            else
-            {
-                return "";
-            }
+    static String GenerateRealPath(String logicPath, boolean isFile) throws Exception{
+        String path= ServiceNode.GetInstance().GetRootPath() + logicPath;
+        File file = new File(path);
+        if (file.exists()&&file.isFile()==isFile)
+        {
+            return path;
+        }
+        else
+        {
+            throw new Exception("The given path does not exist: [" + logicPath + "]");
         }
     }
 
-    protected void ReturnFileSystemEntries(RequestSocket requestSocket) throws Exception{
+    protected void GetFileSystemEntries(RequestSocket requestSocket) throws Exception{
         String logicPath=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String realPath=GenerateRealPath(logicPath,false);
-        if(realPath.equals("")){
-            HandleErrorMessage(requestSocket,"The path does not exist: [" + logicPath + "]");
-        }else{
-            StringBuilder directoryInfoStringBuilder=new StringBuilder();
-            StringBuilder fileInfoStringBuilder=new StringBuilder();
-            File dir=new File(realPath);
-            File[] fileSystemEntityArray=dir.listFiles();
-            if(fileSystemEntityArray!=null){
-                for(File item : fileSystemEntityArray){
-                    String entityName=item.getName();
-                    Date date=new Date(item.lastModified());
-                    SimpleDateFormat format=new SimpleDateFormat("yyyy/MM/dd HH:mm");
-                    String lastModifiedTime=format.format(date);
-                    if(item.isDirectory()){
-                        String directoryInfoString=entityName+"*"+lastModifiedTime+"*|";
-                        directoryInfoStringBuilder.append(directoryInfoString);
-                    }else{
-                        String fileSize=String.valueOf(item.length()/1024);
-                        String fileInfoString=entityName+"*"+lastModifiedTime+"*"+fileSize+"|";
-                        fileInfoStringBuilder.append(fileInfoString);
-                    }
+        StringBuilder directoryInfoStringBuilder=new StringBuilder();
+        StringBuilder fileInfoStringBuilder=new StringBuilder();
+        File dir=new File(realPath);
+        File[] fileSystemEntityArray=dir.listFiles();
+        if(fileSystemEntityArray!=null){
+            for(File item : fileSystemEntityArray){
+                String entityName=item.getName();
+                Date date=new Date(item.lastModified());
+                SimpleDateFormat format=new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                String lastModifiedTime=format.format(date);
+                if(item.isDirectory()){
+                    String directoryInfoString=entityName+"*"+lastModifiedTime+"*|";
+                    directoryInfoStringBuilder.append(directoryInfoString);
+                }else{
+                    String fileSize=String.valueOf(item.length()/1024);
+                    String fileInfoString=entityName+"*"+lastModifiedTime+"*"+fileSize+"|";
+                    fileInfoStringBuilder.append(fileInfoString);
                 }
             }
-            String fileSystemEntityInfoString=directoryInfoStringBuilder.toString()+fileInfoStringBuilder.toString();
-            HandleResponseData(requestSocket,"text/plain", fileSystemEntityInfoString.getBytes(StandardCharsets.UTF_8));
         }
+        String fileSystemEntityInfoString=directoryInfoStringBuilder.toString()+fileInfoStringBuilder.toString();
+        HandleResponseData(requestSocket,"text/plain", fileSystemEntityInfoString.getBytes(StandardCharsets.UTF_8));
     }
 
     private void SetFileInfo(RequestSocket requestSocket) throws Exception{
@@ -83,22 +75,15 @@ public class FileHandler extends BaseRequestHandler {
         String filePath = GenerateRealPath(strDataArray[0], false);
         String fileName = strDataArray[1];
         long fileSize = Long.parseLong(strDataArray[2]);
-        if(filePath.equals(""))
-        {
-            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + filePath + "]");
+        FileEntity container=new FileEntity(filePath+"/"+fileName,fileSize);
+        Random random=new Random();
+        int key=random.nextInt(10000);
+        synchronized (syncObject){
+            while (fileEntityDictionary.get(key)!=null)
+                key=(key+1)%10000;
+            fileEntityDictionary.put(key,container);
         }
-        else
-        {
-            FileEntity container=new FileEntity(filePath+"/"+fileName,fileSize);
-            Random random=new Random();
-            int key=random.nextInt(10000);
-            synchronized (syncObject){
-                while (fileEntityDictionary.get(key)!=null)
-                    key=(key+1)%10000;
-                fileEntityDictionary.put(key,container);
-            }
-            HandleResponseMessage(requestSocket, "text/plain",String.valueOf(key));
-        }
+        HandleResponseMessage(requestSocket, "text/plain",String.valueOf(key));
     }
 
     private void StoreFileChunk(RequestSocket requestSocket){
@@ -236,45 +221,46 @@ public class FileHandler extends BaseRequestHandler {
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String logicPath= URLDecoder.decode(strDataContent,StandardCharsets.UTF_8).split("=",2)[1];
         String path = GenerateRealPath(logicPath,true);
-        if (path.equals(""))
-        {
-            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + logicPath + "]");
+        File targetFile=new File(path);
+        FileInputStream inputStream=new FileInputStream(path);
+        String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
+                "Content-Length:"+targetFile.length()+System.lineSeparator()+
+                "Content-Disposition:attachment; filename="+targetFile.getName()+System.lineSeparator()+
+                System.lineSeparator();
+        OutputStream outputStream=requestSocket.GetOutputStream();
+        outputStream.write(responseHeader.getBytes());
+        for(byte[] chunkData=inputStream.readNBytes((int)chunkLength);chunkData.length>0;chunkData=inputStream.readNBytes((int)chunkLength)){
+            outputStream.write(chunkData);
+            outputStream.flush();
         }
-        else
-        {
-            File targetFile=new File(path);
-            FileInputStream inputStream=new FileInputStream(path);
-            String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
-                    "Content-Length:"+targetFile.length()+System.lineSeparator()+
-                    "Content-Disposition:attachment; filename="+targetFile.getName()+System.lineSeparator()+
-                    System.lineSeparator();
-            OutputStream outputStream=requestSocket.GetOutputStream();
-            outputStream.write(responseHeader.getBytes());
-            for(byte[] chunkData=inputStream.readNBytes((int)chunkLength);chunkData.length>0;chunkData=inputStream.readNBytes((int)chunkLength)){
-                outputStream.write(chunkData);
-                outputStream.flush();
-            }
-            outputStream.close();
-            requestSocket.Close();
-        }
+        outputStream.close();
+        requestSocket.Close();
     }
 
     private void DeleteFile(RequestSocket requestSocket) throws Exception{
         String logicPath = new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String path = GenerateRealPath(logicPath,true);
-        if (path.equals(""))
-        {
-            HandleErrorMessage(requestSocket, "Cannot find the given path: [" + logicPath + "]");
-        }
+        File targetFile=new File(path);
+        boolean result=targetFile.delete();
+        if(result)
+            HandleResponseMessage(requestSocket, "text/plain","Success!");
         else
-        {
-            File targetFile=new File(path);
-            boolean result=targetFile.delete();
-            if(result)
-                HandleResponseMessage(requestSocket, "text/plain","Success!");
-            else
-                HandleErrorMessage(requestSocket,"Fail to delete the file: [" + logicPath + "]");
+            HandleErrorMessage(requestSocket,"Fail to delete the file: [" + logicPath + "]");
+    }
+
+    private void CreateFolder(RequestSocket requestSocket) throws Exception{
+        String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
+        String[] strDataArray = strDataContent.split("\\|",2);
+        String path = GenerateRealPath(strDataArray[0],false);
+        String folderName = strDataArray[1];
+        String fullPath = path + "/" + folderName;
+        File targetFolder = new File(fullPath);
+        if (!targetFolder.exists()){
+            if(!targetFolder.mkdirs()){
+                throw new Exception("Fail to create the folder: [" + strDataArray[0] + "/" + folderName + "]");
+            }
         }
+        HandleResponseMessage(requestSocket, "text/plain","Success!");
     }
 
     @Override
@@ -286,7 +272,7 @@ public class FileHandler extends BaseRequestHandler {
                 if(requestSocket.CheckUrlArrayFormat(2)){
                     switch (requestSocket.GetUrlArray()[1]){
                         case "GetFileSystemEntries":
-                            ReturnFileSystemEntries(requestSocket);
+                            GetFileSystemEntries(requestSocket);
                             break;
                         case "SetFileInfo":
                             SetFileInfo(requestSocket);
@@ -302,6 +288,9 @@ public class FileHandler extends BaseRequestHandler {
                             break;
                         case "DeleteFile":
                             DeleteFile(requestSocket);
+                            break;
+                        case "CreateFolder":
+                            CreateFolder(requestSocket);
                             break;
                         default:
                             HandleErrorMessage(requestSocket,"Cannot find the given task: [" + requestSocket.GetUrlArray()[1] + "]");

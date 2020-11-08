@@ -20,61 +20,54 @@ public class VideoHandler extends BaseRequestHandler{
                     case "PlayVideo":
                         String logicPath = URLDecoder.decode(requestSocket.GetUrlArray()[2],"UTF-8");
                         String videoPath = FileHandler.GenerateRealPath(logicPath,true);
-                        if (videoPath.equals(""))
-                        {
-                            HandleErrorMessage(requestSocket, "Cannot find the given file: [" + logicPath + "]");
-                        }
-                        else
-                        {
-                            File videoFile=new File(videoPath);
-                            String rangeString=requestSocket.GetRange();
-                            FileInputStream inputStream=new FileInputStream(videoFile);
-                            if(rangeString!=null&&!rangeString.isEmpty()){
-                                String[] rangeIndexArray=rangeString.split("=")[1].split("-");
-                                long startIndex=Long.valueOf(rangeIndexArray[0]);
-                                long endIndex=startIndex+chunkSize-1;
-                                if(rangeIndexArray.length>1&&rangeIndexArray[1]!=null&&!rangeIndexArray[1].isEmpty()){
-                                    long endIndexInRangeArray=Long.valueOf(rangeIndexArray[1]);
-                                    if(endIndexInRangeArray>startIndex){
-                                        endIndex=endIndexInRangeArray;
-                                    }
+                        File videoFile=new File(videoPath);
+                        String rangeString=requestSocket.GetRange();
+                        FileInputStream inputStream=new FileInputStream(videoFile);
+                        if(rangeString!=null&&!rangeString.isEmpty()){
+                            String[] rangeIndexArray=rangeString.split("=")[1].split("-");
+                            long startIndex=Long.valueOf(rangeIndexArray[0]);
+                            long endIndex=startIndex+chunkSize-1;
+                            if(rangeIndexArray.length>1&&rangeIndexArray[1]!=null&&!rangeIndexArray[1].isEmpty()){
+                                long endIndexInRangeArray=Long.valueOf(rangeIndexArray[1]);
+                                if(endIndexInRangeArray>startIndex){
+                                    endIndex=endIndexInRangeArray;
                                 }
-                                if(endIndex>=videoFile.length()){
-                                    endIndex=videoFile.length()-1;
-                                }
-                                requestSocket.AddAdditionalResponseHeader("Content-Range: bytes "+startIndex+"-"+endIndex+"/"+videoFile.length());
-                                long skippedLength=inputStream.skip(startIndex);
-                                if(skippedLength==startIndex){
-                                    long currentChunkLength=endIndex-startIndex+1;
-                                    byte[] videoChunkData=new byte[(int)currentChunkLength];
-                                    if(inputStream.read(videoChunkData,0,(int)currentChunkLength)==-1){
-                                        HandleErrorMessage(requestSocket,"Fail to read chunk from video file.");
-                                    }
-                                    requestSocket.SetStatusCode("206");
-                                    HandleResponseData(requestSocket,"video/mp4",videoChunkData);
-                                }else{
-                                    HandleErrorMessage(requestSocket,"Fail to handle the start index: [" + startIndex + "]");
-                                }
-                            }else{
-                                String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
-                                        "Content-Type:video/mp4;charset=utf-8"+System.lineSeparator()+
-                                        "Content-Length:"+videoFile.length()+System.lineSeparator()+
-                                        System.lineSeparator();
-                                OutputStream outputStream=requestSocket.GetOutputStream();
-                                outputStream.write(responseHeader.getBytes());
-                                for(byte[] chunkData=new byte[chunkSize];;){
-                                    if(inputStream.read(chunkData,0,chunkSize)==-1){
-                                        logger.info("Video data reading finished.");
-                                        break;
-                                    }
-                                    outputStream.write(chunkData);
-                                    outputStream.flush();
-                                }
-                                outputStream.close();
-                                requestSocket.Close();
                             }
-                            inputStream.close();
+                            if(endIndex>=videoFile.length()){
+                                endIndex=videoFile.length()-1;
+                            }
+                            requestSocket.AddAdditionalResponseHeader("Content-Range: bytes "+startIndex+"-"+endIndex+"/"+videoFile.length());
+                            long skippedLength=inputStream.skip(startIndex);
+                            if(skippedLength==startIndex){
+                                long currentChunkLength=endIndex-startIndex+1;
+                                byte[] videoChunkData=new byte[(int)currentChunkLength];
+                                if(inputStream.read(videoChunkData,0,(int)currentChunkLength)==-1){
+                                    HandleErrorMessage(requestSocket,"Fail to read chunk from video file.");
+                                }
+                                requestSocket.SetStatusCode("206");
+                                HandleResponseData(requestSocket,"video/mp4",videoChunkData);
+                            }else{
+                                HandleErrorMessage(requestSocket,"Fail to handle the start index: [" + startIndex + "]");
+                            }
+                        }else{
+                            String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
+                                    "Content-Type:video/mp4;charset=utf-8"+System.lineSeparator()+
+                                    "Content-Length:"+videoFile.length()+System.lineSeparator()+
+                                    System.lineSeparator();
+                            OutputStream outputStream=requestSocket.GetOutputStream();
+                            outputStream.write(responseHeader.getBytes());
+                            for(byte[] chunkData=new byte[chunkSize];;){
+                                if(inputStream.read(chunkData,0,chunkSize)==-1){
+                                    logger.info("Video data reading finished.");
+                                    break;
+                                }
+                                outputStream.write(chunkData);
+                                outputStream.flush();
+                            }
+                            outputStream.close();
+                            requestSocket.Close();
                         }
+                        inputStream.close();
                         break;
                     default:
                         HandleErrorMessage(requestSocket,"Cannot find the given task: [" + requestSocket.GetUrlArray()[1] + "]");
