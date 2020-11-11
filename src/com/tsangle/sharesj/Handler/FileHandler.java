@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.OutputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
@@ -248,6 +249,31 @@ public class FileHandler extends BaseRequestHandler {
             HandleErrorMessage(requestSocket,"Fail to delete the file: [" + logicPath + "]");
     }
 
+    private boolean deleteDir(File file) throws Exception{
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                if (! Files.isSymbolicLink(f.toPath())) {
+                    deleteDir(f);
+                }else{
+                    Files.delete(f.toPath());
+                }
+            }
+        }
+        return file.delete();
+    }
+
+    private void DeleteFolder(RequestSocket requestSocket) throws Exception{
+        String logicPath = new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
+        String path = GenerateRealPath(logicPath,false);
+        File targetFile=new File(path);
+        boolean result=deleteDir(targetFile);
+        if(result)
+            HandleResponseMessage(requestSocket, "text/plain","Success!");
+        else
+            HandleErrorMessage(requestSocket,"Fail to delete the file: [" + logicPath + "]");
+    }
+
     private void CreateFolder(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String[] strDataArray = strDataContent.split("\\|",2);
@@ -288,6 +314,9 @@ public class FileHandler extends BaseRequestHandler {
                             break;
                         case "DeleteFile":
                             DeleteFile(requestSocket);
+                            break;
+                        case "DeleteFolder":
+                            DeleteFolder(requestSocket);
                             break;
                         case "CreateFolder":
                             CreateFolder(requestSocket);

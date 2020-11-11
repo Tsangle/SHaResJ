@@ -50,11 +50,13 @@
     var createFolderButton = $("#createFolderButton");
     var cancelCreatingButton = $("#cancelCreatingButton");
     var folderNameInput = $("#folderNameInput");
+    var optionMenuMask = $("#optionMenuMask");
     var body = $("body");
     var shownModalCount = 0;
     var fileUploader;
     var filenameList;
     var currentFileIndex;
+    var selectedEntry;
     var serviceNodeName = currentFolderNameElement.text();
 
     $('.modal').on('show.bs.modal', function (e) {
@@ -386,7 +388,8 @@
                     var entryInfo = fileSystemEntries[index].split("*");
                     var dateTime = entryInfo[1].split(" ");
                     if (entryInfo[2] === "") {
-                        $("<tr class='entryTableFolder' entryName=\"" + entryInfo[0] + "\"><td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='folderIcon fas fa-folder' aria-hidden='true'></i></div></div>" +
+                        $("<tr class='entryTableItem entryTableFolder' entryName=\"" + entryInfo[0] + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='<i class=\"far fa-trash-alt tooltipDeletionIcon\"></i>'>" +
+                            "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='folderIcon fas fa-folder' aria-hidden='true'></i></div></div>" +
                             "<div class='d-inline-block verticalCenter pb-1' style='max-width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;'>" + entryInfo[0] + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
                             dateTime[0] + ", " + dateTime[1] + "</div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                         folderCount++;
@@ -405,7 +408,8 @@
                                 }
                             }
                         }
-                        $("<tr class='entryTableFile' index='" + filenameList.length + "' entryName=\"" + entryInfo[0] + "\"><td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='fileIcon fas fa-file-alt' aria-hidden='true'></i></div></div>" +
+                        $("<tr class='entryTableItem entryTableFile' index='" + filenameList.length + "' entryName=\"" + entryInfo[0] + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='<i class=\"far fa-trash-alt tooltipDeletionIcon\"></i>'>" +
+                            "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='fileIcon fas fa-file-alt' aria-hidden='true'></i></div></div>" +
                             "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);p'><div class='text-truncate' style='width:100%;'>" + entryInfo[0] + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
                             dateTime[0] + ", " + dateTime[1] + "<div class='float-right'>" + fileSizeDisplay.toFixed(2) + " " + unit + "</div></div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                         filenameList.push(entryInfo[0]);
@@ -413,6 +417,31 @@
                 }
                 folderNumberElement.text(folderCount);
                 fileNumberElement.text(filenameList.length);
+                $("tr.entryTableItem").contextmenu(function(event){
+                    selectedEntry = $(this);
+                    selectedEntry.tooltip("show");
+                    optionMenuMask.show();
+                    event.preventDefault();
+                    $("i.tooltipDeletionIcon").click(function(){
+                        optionMenuMask.hide();
+                        selectedEntry.tooltip("hide");
+                        var type = "Folder";
+                        if (selectedEntry.hasClass("entryTableFile")){
+                            type = "File";
+                        }
+                        showConfirmationDialog("Delete "+type+"?", "<u class='text-wrap text-break'>" + selectedEntry.attr("entryName") + "</u> will be deleted.", function(){
+                            var fullPath = sessionStorage.getItem("path") + "/" + selectedEntry.attr("entryName");
+                            $.post("/File/Delete"+type, fullPath, function (data) {
+                                if (data.slice(0, 1) !== "#") {
+                                    showAlertMessage("<u>"+selectedEntry.attr("entryName")+"</u> deleted!", "Info", "success");
+                                    refreshFileSystemEntryList();
+                                } else {
+                                    showAlertMessage(data, "Error", "danger");
+                                }
+                            });
+                        });
+                    });
+                });
                 $(function () {
                     $("[data-toggle='tooltip']").tooltip();
                 });
@@ -476,6 +505,11 @@
             resetFileModalBody();
             showFileInfo(filenameList[currentFileIndex]);
         }
+    });
+
+    optionMenuMask.click(function(){
+        selectedEntry.tooltip("hide");
+        optionMenuMask.hide();
     });
 
     var toggleFloatingMenu = function(){
