@@ -387,8 +387,20 @@
                 for (var index = 0; index < fileSystemEntries.length - 1; index++) {
                     var entryInfo = fileSystemEntries[index].split("*");
                     var dateTime = entryInfo[1].split(" ");
+                    var tooltipContent =
+                        "<div class=\"row tooltipMenu m-0\">" +
+                            "<div class=\"col-4 border-right d-flex tooltipDeletingColumn tooltipColumn justify-content-center\">" +
+                                "<i class=\"fas fa-trash-alt\"></i>" +
+                            "</div>" +
+                            "<div class=\"col-4 border-right d-flex tooltipRenamingColumn tooltipColumn justify-content-center\">" +
+                                "<i class=\"fas fa-pen-nib\"></i>" +
+                            "</div>" +
+                            "<div class=\"col-4 d-flex tooltipInfoColumn tooltipColumn justify-content-center\">" +
+                                "<i class=\"fas fa-eye\"></i>" +
+                            "</div>" +
+                        "</div>";
                     if (entryInfo[2] === "") {
-                        $("<tr class='entryTableItem entryTableFolder' entryName=\"" + entryInfo[0] + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='<i class=\"far fa-trash-alt tooltipDeletionIcon\"></i>'>" +
+                        $("<tr class='entryTableItem entryTableFolder' entryName=\"" + entryInfo[0] + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
                             "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='folderIcon fas fa-folder' aria-hidden='true'></i></div></div>" +
                             "<div class='d-inline-block verticalCenter pb-1' style='max-width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;'>" + entryInfo[0] + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
                             dateTime[0] + ", " + dateTime[1] + "</div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
@@ -408,7 +420,7 @@
                                 }
                             }
                         }
-                        $("<tr class='entryTableItem entryTableFile' index='" + filenameList.length + "' entryName=\"" + entryInfo[0] + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='<i class=\"far fa-trash-alt tooltipDeletionIcon\"></i>'>" +
+                        $("<tr class='entryTableItem entryTableFile' index='" + filenameList.length + "' entryName=\"" + entryInfo[0] + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
                             "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='fileIcon fas fa-file-alt' aria-hidden='true'></i></div></div>" +
                             "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);p'><div class='text-truncate' style='width:100%;'>" + entryInfo[0] + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
                             dateTime[0] + ", " + dateTime[1] + "<div class='float-right'>" + fileSizeDisplay.toFixed(2) + " " + unit + "</div></div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
@@ -420,11 +432,13 @@
                 $("tr.entryTableItem").contextmenu(function(event){
                     selectedEntry = $(this);
                     selectedEntry.tooltip("show");
+                    body.css("overflow-y", "hidden");
                     optionMenuMask.show();
                     event.preventDefault();
-                    $("i.tooltipDeletionIcon").click(function(){
+                    $("div.tooltipDeletingColumn").click(function(){
                         optionMenuMask.hide();
                         selectedEntry.tooltip("hide");
+                        body.css("overflow-y", "");
                         var type = "Folder";
                         if (selectedEntry.hasClass("entryTableFile")){
                             type = "File";
@@ -509,6 +523,7 @@
 
     optionMenuMask.click(function(){
         selectedEntry.tooltip("hide");
+        body.css("overflow-y", "");
         optionMenuMask.hide();
     });
 
