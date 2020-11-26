@@ -51,6 +51,17 @@
     var cancelCreatingButton = $("#cancelCreatingButton");
     var folderNameInput = $("#folderNameInput");
     var optionMenuMask = $("#optionMenuMask");
+    var propertyModal = $("#propertyModal");
+    var nameInPropForm = $("#nameInPropForm");
+    var pathInPropForm = $("#pathInPropForm");
+    var lastModifiedTimeInPropForm = $("#lastModifiedTimeInPropForm");
+    var typeInPropForm = $("#typeInPropForm");
+    var sizeInPropForm = $("#sizeInPropForm");
+    var permissionInPropForm = $("#permissionInPropForm");
+    var renamingEntryModal = $("#renamingEntryModal");
+    var newEntryNameInput = $("#newEntryNameInput");
+    var renameEntryButton = $("#renameEntryButton");
+    var bodyMask = $("#bodyMask");
     var body = $("body");
     var shownModalCount = 0;
     var fileUploader;
@@ -129,7 +140,16 @@
     cancelButton.click(function(){
         confirmModal.modal("hide");
     });
-    
+    renamingEntryModal.on('shown.bs.modal', function (e) {
+        newEntryNameInput.focus();
+    });
+    renamingEntryModal.on('show.bs.modal', function (e) {
+        bodyMask.fadeIn();
+    });
+    renamingEntryModal.on('hide.bs.modal', function (e) {
+        bodyMask.fadeOut();
+    });
+
     var initUploadingModal = function () {
         selectFileDiv.hide();
         uploadingProgressBar.css("width", "0%");
@@ -356,6 +376,66 @@
             fileNameInput.val("");
         }
     });
+    var tooltipDeletingOptionClickCallback = function(){
+        optionMenuMask.hide();
+        selectedEntry.tooltip("hide");
+        body.css("overflow-y", "");
+        var type = "Folder";
+        if (selectedEntry.hasClass("entryTableFile")){
+            type = "File";
+        }
+        showConfirmationDialog("Delete "+type+"?", "<u class='text-wrap text-break'>" + selectedEntry.attr("entryName") + "</u> will be deleted.", function(){
+            var fullPath = sessionStorage.getItem("path") + "/" + selectedEntry.attr("entryName");
+            $.post("/File/Delete"+type, fullPath, function (data) {
+                if (data.slice(0, 1) !== "#") {
+                    showAlertMessage("<u>"+selectedEntry.attr("entryName")+"</u> deleted!", "Info", "success");
+                    refreshFileSystemEntryList();
+                } else {
+                    showAlertMessage(data, "Error", "danger");
+                }
+            });
+        });
+    };
+    var tooltipPropertyOptionClickCallback = function(){
+        optionMenuMask.hide();
+        selectedEntry.tooltip("hide");
+        body.css("overflow-y", "");
+        var type = "Folder";
+        if (selectedEntry.hasClass("entryTableFile")){
+            type = "File";
+        }
+        nameInPropForm.html(selectedEntry.attr("entryName"));
+        pathInPropForm.html("Root"+sessionStorage.getItem("path")+"/"+selectedEntry.attr("entryName"));
+        lastModifiedTimeInPropForm.html(selectedEntry.attr("lastModifiedTime"));
+        typeInPropForm.html(type);
+        sizeInPropForm.html(selectedEntry.attr("size"));
+        permissionInPropForm.html(selectedEntry.attr("permission"));
+        propertyModal.modal("show");
+    };
+    var tooltipRenamingOptionClickCallback = function(){
+        optionMenuMask.hide();
+        selectedEntry.tooltip("hide");
+        body.css("overflow-y", "");
+        newEntryNameInput.val(selectedEntry.attr("entryName"));
+        renamingEntryModal.modal("show");
+    };
+    renameEntryButton.click(function(){
+        if (newEntryNameInput.val() !== undefined && newEntryNameInput.val() !== null && newEntryNameInput.val() !== "") {
+            var renamingInfo = sessionStorage.getItem("path") +"/"+selectedEntry.attr("entryName")+ "|" + newEntryNameInput.val();
+            $.post("/File/RenameEntry", folderInfo, function (data) {
+                if (data.slice(0, 1) !== "#") {
+                    showAlertMessage("<u>"+folderNameInput.val()+"</u> created!", "Info", "success");
+                    creatingFolderModal.modal("hide");
+                    refreshFileSystemEntryList();
+                } else {
+                    showAlertMessage(data, "Error", "danger");
+                }
+            });
+        } else {
+            showAlertMessage("Please input the name!", "Warning", "warning");
+        }
+    });
+
     var getFileSystemEntry = function (path) {
         sessionStorage.setItem("path", path);
         var pathNodeArray = path.split("/");
@@ -386,44 +466,47 @@
                 var folderCount = 0;
                 for (var index = 0; index < fileSystemEntries.length - 1; index++) {
                     var entryInfo = fileSystemEntries[index].split("*");
-                    var dateTime = entryInfo[1].split(" ");
+                    var entryName = entryInfo[0];
+                    var lastModifiedTime = entryInfo[1];
+                    var size = entryInfo[2];
+                    var permission = entryInfo[3];
                     var tooltipContent =
                         "<div class=\"row tooltipMenu m-0\">" +
-                            "<div class=\"col-4 border-right d-flex tooltipDeletingColumn tooltipColumn justify-content-center\">" +
+                            "<div class=\"col-4 border-right d-flex tooltipDeletingOption tooltipOption justify-content-center\">" +
                                 "<i class=\"fas fa-trash-alt\"></i>" +
                             "</div>" +
-                            "<div class=\"col-4 border-right d-flex tooltipRenamingColumn tooltipColumn justify-content-center\">" +
+                            "<div class=\"col-4 border-right d-flex tooltipRenamingOption tooltipOption justify-content-center\">" +
                                 "<i class=\"fas fa-pen-nib\"></i>" +
                             "</div>" +
-                            "<div class=\"col-4 d-flex tooltipInfoColumn tooltipColumn justify-content-center\">" +
+                            "<div class=\"col-4 d-flex tooltipPropertyOption tooltipOption justify-content-center\">" +
                                 "<i class=\"fas fa-eye\"></i>" +
                             "</div>" +
                         "</div>";
-                    if (entryInfo[2] === "") {
-                        $("<tr class='entryTableItem entryTableFolder' entryName=\"" + entryInfo[0] + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
+                    if (size === "") {
+                        $("<tr class='entryTableItem entryTableFolder' entryName=\"" + entryName + "\" permission=\"" + permission + "\" size='-' lastModifiedTime='" + lastModifiedTime + "' data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
                             "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='folderIcon fas fa-folder' aria-hidden='true'></i></div></div>" +
-                            "<div class='d-inline-block verticalCenter pb-1' style='max-width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;'>" + entryInfo[0] + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
-                            dateTime[0] + ", " + dateTime[1] + "</div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                            "<div class='d-inline-block verticalCenter pb-1' style='max-width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;'>" + entryName + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
+                            lastModifiedTime + "</div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                         folderCount++;
                     } else {
-                        var fileSizeDisplay = parseFloat(entryInfo[2]);
-                        var unit = 'KB';
+                        var fileSizeDisplay = parseFloat(size);
+                        var unit = 'B';
                         if (fileSizeDisplay / 1024 > 1) {
                             fileSizeDisplay = fileSizeDisplay / 1024;
-                            unit = 'MB';
+                            unit = 'KB';
                             if (fileSizeDisplay / 1024 > 1) {
                                 fileSizeDisplay = fileSizeDisplay / 1024;
-                                unit = 'GB';
+                                unit = 'MB';
                                 if (fileSizeDisplay / 1024 > 1) {
                                     fileSizeDisplay = fileSizeDisplay / 1024;
-                                    unit = 'TB';
+                                    unit = 'GB';
                                 }
                             }
                         }
-                        $("<tr class='entryTableItem entryTableFile' index='" + filenameList.length + "' entryName=\"" + entryInfo[0] + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
+                        $("<tr class='entryTableItem entryTableFile' index='" + filenameList.length + "' permission=\"" + permission + "\" size='" + size + "B' lastModifiedTime='" + lastModifiedTime + "' entryName=\"" + entryName + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
                             "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='fileIcon fas fa-file-alt' aria-hidden='true'></i></div></div>" +
-                            "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);p'><div class='text-truncate' style='width:100%;'>" + entryInfo[0] + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
-                            dateTime[0] + ", " + dateTime[1] + "<div class='float-right'>" + fileSizeDisplay.toFixed(2) + " " + unit + "</div></div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                            "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);p'><div class='text-truncate' style='width:100%;'>" + entryName + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
+                            lastModifiedTime + "<div class='float-right'>" + fileSizeDisplay.toFixed(2) + " " + unit + "</div></div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                         filenameList.push(entryInfo[0]);
                     }
                 }
@@ -435,26 +518,9 @@
                     body.css("overflow-y", "hidden");
                     optionMenuMask.show();
                     event.preventDefault();
-                    $("div.tooltipDeletingColumn").click(function(){
-                        optionMenuMask.hide();
-                        selectedEntry.tooltip("hide");
-                        body.css("overflow-y", "");
-                        var type = "Folder";
-                        if (selectedEntry.hasClass("entryTableFile")){
-                            type = "File";
-                        }
-                        showConfirmationDialog("Delete "+type+"?", "<u class='text-wrap text-break'>" + selectedEntry.attr("entryName") + "</u> will be deleted.", function(){
-                            var fullPath = sessionStorage.getItem("path") + "/" + selectedEntry.attr("entryName");
-                            $.post("/File/Delete"+type, fullPath, function (data) {
-                                if (data.slice(0, 1) !== "#") {
-                                    showAlertMessage("<u>"+selectedEntry.attr("entryName")+"</u> deleted!", "Info", "success");
-                                    refreshFileSystemEntryList();
-                                } else {
-                                    showAlertMessage(data, "Error", "danger");
-                                }
-                            });
-                        });
-                    });
+                    $("div.tooltipDeletingOption").click(tooltipDeletingOptionClickCallback);
+                    $("div.tooltipRenamingOption").click(tooltipRenamingOptionClickCallback);
+                    $("div.tooltipPropertyOption").click(tooltipPropertyOptionClickCallback);
                 });
                 $(function () {
                     $("[data-toggle='tooltip']").tooltip();

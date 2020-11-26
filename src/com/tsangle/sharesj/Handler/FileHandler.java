@@ -56,12 +56,28 @@ public class FileHandler extends BaseRequestHandler {
                 Date date=new Date(item.lastModified());
                 SimpleDateFormat format=new SimpleDateFormat("yyyy/MM/dd HH:mm");
                 String lastModifiedTime=format.format(date);
+                String permission="";
+                if(item.canRead()){
+                    permission+="r";
+                }else{
+                    permission+="-";
+                }
+                if(item.canWrite()){
+                    permission+="w";
+                }else{
+                    permission+="-";
+                }
+                if(item.canExecute()){
+                    permission+="x";
+                }else{
+                    permission+="-";
+                }
                 if(item.isDirectory()){
-                    String directoryInfoString=entityName+"*"+lastModifiedTime+"*|";
+                    String directoryInfoString=entityName+"*"+lastModifiedTime+"**"+permission+"|";
                     directoryInfoStringBuilder.append(directoryInfoString);
                 }else{
-                    String fileSize=String.valueOf(item.length()/1024);
-                    String fileInfoString=entityName+"*"+lastModifiedTime+"*"+fileSize+"|";
+                    String fileSize=String.valueOf(item.length());
+                    String fileInfoString=entityName+"*"+lastModifiedTime+"*"+fileSize+"*"+permission+"|";
                     fileInfoStringBuilder.append(fileInfoString);
                 }
             }

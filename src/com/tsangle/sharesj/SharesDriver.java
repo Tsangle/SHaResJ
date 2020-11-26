@@ -14,7 +14,7 @@ public class SharesDriver {
         try {
             HttpListener listener=new HttpListener();
             Scanner scanner=new Scanner(System.in);
-            System.out.println("Please input the path of shared folder:");
+            System.out.println("Please input a path as the root directory of NAS:");
             String path=scanner.nextLine();
             ServiceNode.GetInstance().SetRootPath(path);
             System.out.println("Please input the name of this machine:");

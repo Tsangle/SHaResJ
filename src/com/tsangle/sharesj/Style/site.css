@@ -174,7 +174,7 @@ body {
     padding: 0;
 }
 
-.tooltipColumn{
+.tooltipOption{
     cursor:pointer;
     font-size:1.1rem;
     padding: .5rem;
@@ -182,4 +182,9 @@ body {
 
 .tooltip.show {
     opacity: .75;
+}
+
+.propFormContent{
+    color: rgb(100,100,100);
+    font-size: .8rem;
 }
