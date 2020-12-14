@@ -33,6 +33,7 @@ public class HttpListener {
             handlerDispenser.AddHandler(new LocalFileHandler());
             handlerDispenser.AddHandler(new LocalImageHandler());
             handlerDispenser.AddHandler(new LocalVideoHandler());
+            handlerDispenser.AddHandler(new UrlAccessHandler());
         }catch (Exception e){
             StringWriter stringWriter = new StringWriter();
             e.printStackTrace(new PrintWriter(stringWriter));

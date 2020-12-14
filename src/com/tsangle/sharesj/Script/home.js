@@ -407,7 +407,7 @@
         }
         nameInPropForm.html(selectedEntry.attr("entryName"));
         pathInPropForm.html("Root"+sessionStorage.getItem("path")+"/"+selectedEntry.attr("entryName"));
-        urlInPropForm.html(encodeURIComponent(sessionStorage.getItem("path")+"/"+selectedEntry.attr("entryName")));
+        urlInPropForm.html(window.location.href+"UrlAccess/"+encodeURIComponent(sessionStorage.getItem("path")+"/"+selectedEntry.attr("entryName")));
         lastModifiedTimeInPropForm.html(selectedEntry.attr("lastModifiedTime"));
         typeInPropForm.html(type);
         sizeInPropForm.html(selectedEntry.attr("size"));
