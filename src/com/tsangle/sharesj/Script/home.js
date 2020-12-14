@@ -54,6 +54,7 @@
     var propertyModal = $("#propertyModal");
     var nameInPropForm = $("#nameInPropForm");
     var pathInPropForm = $("#pathInPropForm");
+    var urlInPropForm = $("#urlInPropForm");
     var lastModifiedTimeInPropForm = $("#lastModifiedTimeInPropForm");
     var typeInPropForm = $("#typeInPropForm");
     var sizeInPropForm = $("#sizeInPropForm");
@@ -406,6 +407,7 @@
         }
         nameInPropForm.html(selectedEntry.attr("entryName"));
         pathInPropForm.html("Root"+sessionStorage.getItem("path")+"/"+selectedEntry.attr("entryName"));
+        urlInPropForm.html(encodeURIComponent(sessionStorage.getItem("path")+"/"+selectedEntry.attr("entryName")));
         lastModifiedTimeInPropForm.html(selectedEntry.attr("lastModifiedTime"));
         typeInPropForm.html(type);
         sizeInPropForm.html(selectedEntry.attr("size"));
@@ -420,19 +422,19 @@
         renamingEntryModal.modal("show");
     };
     renameEntryButton.click(function(){
-        if (newEntryNameInput.val() !== undefined && newEntryNameInput.val() !== null && newEntryNameInput.val() !== "") {
-            var renamingInfo = sessionStorage.getItem("path") +"/"+selectedEntry.attr("entryName")+ "|" + newEntryNameInput.val();
-            $.post("/File/RenameEntry", folderInfo, function (data) {
+        if (newEntryNameInput.val() !== undefined && newEntryNameInput.val() !== null && newEntryNameInput.val() !== "" && newEntryNameInput.val() !== selectedEntry.attr("entryName")) {
+            var renamingInfo = sessionStorage.getItem("path") +"|"+selectedEntry.attr("entryName")+ "|" + newEntryNameInput.val();
+            $.post("/File/RenameEntry", renamingInfo, function (data) {
                 if (data.slice(0, 1) !== "#") {
-                    showAlertMessage("<u>"+folderNameInput.val()+"</u> created!", "Info", "success");
-                    creatingFolderModal.modal("hide");
+                    showAlertMessage("<u>" + selectedEntry.attr("entryName") + "</u> renamed as <u>" + newEntryNameInput.val() + "</u>!", "Info", "success");
+                    renamingEntryModal.modal("hide");
                     refreshFileSystemEntryList();
                 } else {
                     showAlertMessage(data, "Error", "danger");
                 }
             });
         } else {
-            showAlertMessage("Please input the name!", "Warning", "warning");
+            showAlertMessage("Please input a new name!", "Warning", "warning");
         }
     });
 
@@ -456,6 +458,8 @@
             }
             getFileSystemEntry(targetPath);
         });
+        folderNumberElement.html('<div class="spinner-grow text-secondary" role="status" style="width:.7rem;height:.7rem;"></div>');
+        fileNumberElement.html('<div class="spinner-grow text-secondary" role="status" style="width:.7rem;height:.7rem;"></div>');
         fileListTableBody.empty();
         fileListSpinner.show();
         $.post("/File/GetFileSystemEntries", path, function (data) {

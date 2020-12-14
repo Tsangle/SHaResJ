@@ -187,4 +187,5 @@ body {
 .propFormContent{
     color: rgb(100,100,100);
     font-size: .8rem;
+    word-break: break-word!important;
 }

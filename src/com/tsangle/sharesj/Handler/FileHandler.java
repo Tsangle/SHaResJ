@@ -305,6 +305,23 @@ public class FileHandler extends BaseRequestHandler {
         HandleResponseMessage(requestSocket, "text/plain","Success!");
     }
 
+    private void RenameEntry(RequestSocket requestSocket) throws Exception{
+        String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
+        String[] strDataArray = strDataContent.split("\\|",3);
+        String path = GenerateRealPath(strDataArray[0],false);
+        String original_name = strDataArray[1];
+        String new_name = strDataArray[2];
+        File original_entry = new File(path+"/"+original_name);
+        File new_entry = new File(path+"/"+new_name);
+        if (new_entry.exists()){
+            throw new Exception(new_name + " already exists!");
+        }
+        if(!original_entry.renameTo(new_entry)){
+            throw new Exception("Fail in renaming " + original_entry);
+        }
+        HandleResponseMessage(requestSocket, "text/plain","Success!");
+    }
+
     @Override
     public void Handle(RequestSocket requestSocket) {
         try{
@@ -336,6 +353,9 @@ public class FileHandler extends BaseRequestHandler {
                             break;
                         case "CreateFolder":
                             CreateFolder(requestSocket);
+                            break;
+                        case "RenameEntry":
+                            RenameEntry(requestSocket);
                             break;
                         default:
                             HandleErrorMessage(requestSocket,"Cannot find the given task: [" + requestSocket.GetUrlArray()[1] + "]");
