@@ -1,6 +1,7 @@
 package com.tsangle.sharesj.Handler;
 
 import com.tsangle.sharesj.HttpServer.RequestSocket;
+import com.tsangle.sharesj.HttpServer.ServiceNode;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,7 +18,7 @@ public class ImageHandler extends BaseRequestHandler {
                 switch (requestSocket.GetUrlArray()[1]){
                     case "DisplayImage":
                         String logicPath = URLDecoder.decode(requestSocket.GetUrlArray()[2], StandardCharsets.UTF_8);
-                        String imagePath = FileHandler.GenerateRealPath(logicPath,true);
+                        String imagePath = ServiceNode.GetInstance().GetRealPath(logicPath,true);
                         File imageFile=new File(imagePath);
                         FileInputStream inputStream=new FileInputStream(imageFile);
                         byte[] imageData=inputStream.readAllBytes();

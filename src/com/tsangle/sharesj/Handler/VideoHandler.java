@@ -1,6 +1,7 @@
 package com.tsangle.sharesj.Handler;
 
 import com.tsangle.sharesj.HttpServer.RequestSocket;
+import com.tsangle.sharesj.HttpServer.ServiceNode;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,7 +20,7 @@ public class VideoHandler extends BaseRequestHandler{
                 switch (requestSocket.GetUrlArray()[1]){
                     case "PlayVideo":
                         String logicPath = URLDecoder.decode(requestSocket.GetUrlArray()[2],"UTF-8");
-                        String videoPath = FileHandler.GenerateRealPath(logicPath,true);
+                        String videoPath = ServiceNode.GetInstance().GetRealPath(logicPath,true);
                         File videoFile=new File(videoPath);
                         String rangeString=requestSocket.GetRange();
                         FileInputStream inputStream=new FileInputStream(videoFile);

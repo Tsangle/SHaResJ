@@ -1,6 +1,7 @@
 package com.tsangle.sharesj.Handler;
 
 import com.tsangle.sharesj.HttpServer.RequestSocket;
+import com.tsangle.sharesj.HttpServer.ServiceNode;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,7 +18,7 @@ public class UrlAccessHandler extends BaseRequestHandler {
         try{
             if(requestSocket.CheckUrlArrayFormat(2)){
                 String logicPath = URLDecoder.decode(requestSocket.GetUrlArray()[1],"UTF-8");
-                String realPath = FileHandler.GenerateRealPath(logicPath,true);
+                String realPath = ServiceNode.GetInstance().GetRealPath(logicPath,true);
                 File requestedFile=new File(realPath);
                 String rangeString=requestSocket.GetRange();
                 FileInputStream inputStream=new FileInputStream(requestedFile);

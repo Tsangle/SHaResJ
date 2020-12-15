@@ -30,66 +30,46 @@ public class FileHandler extends BaseRequestHandler {
         chunkLength=5000000;
     }
 
-    static String GenerateRealPath(String logicPath, boolean isFile) throws Exception{
-        String path= ServiceNode.GetInstance().GetRootPath() + logicPath;
-        File file = new File(path);
-        if (file.exists()&&file.isFile()==isFile)
-        {
-            return path;
-        }
-        else
-        {
-            throw new Exception("The given path does not exist: [" + logicPath + "]");
-        }
-    }
-
     protected void GetFileSystemEntries(RequestSocket requestSocket) throws Exception{
         String logicPath=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        String realPath=GenerateRealPath(logicPath,false);
-        StringBuilder directoryInfoStringBuilder=new StringBuilder();
-        StringBuilder fileInfoStringBuilder=new StringBuilder();
-        File dir=new File(realPath);
-        File[] fileSystemEntityArray=dir.listFiles();
-        if(fileSystemEntityArray!=null){
-            for(File item : fileSystemEntityArray){
-                String entityName=item.getName();
-                Date date=new Date(item.lastModified());
-                SimpleDateFormat format=new SimpleDateFormat("yyyy/MM/dd HH:mm");
-                String lastModifiedTime=format.format(date);
-                String permission="";
-                if(item.canRead()){
-                    permission+="r";
-                }else{
-                    permission+="-";
-                }
-                if(item.canWrite()){
-                    permission+="w";
-                }else{
-                    permission+="-";
-                }
-                if(item.canExecute()){
-                    permission+="x";
-                }else{
-                    permission+="-";
-                }
-                if(item.isDirectory()){
-                    String directoryInfoString=entityName+"*"+lastModifiedTime+"**"+permission+"|";
-                    directoryInfoStringBuilder.append(directoryInfoString);
-                }else{
-                    String fileSize=String.valueOf(item.length());
-                    String fileInfoString=entityName+"*"+lastModifiedTime+"*"+fileSize+"*"+permission+"|";
-                    fileInfoStringBuilder.append(fileInfoString);
+        if (logicPath.isEmpty()){
+            StringBuilder sharedFolderInfoStringBuilder=new StringBuilder();
+            for (Map.Entry<String, String> entry : ServiceNode.GetInstance().GetSharedFolders().entrySet()){
+                String sharedFolderInfoString=entry.getKey()+"**|";
+                sharedFolderInfoStringBuilder.append(sharedFolderInfoString);
+            }
+            HandleResponseData(requestSocket,"text/plain", sharedFolderInfoStringBuilder.toString().getBytes(StandardCharsets.UTF_8));
+        }else {
+            String realPath=ServiceNode.GetInstance().GetRealPath(logicPath,false);
+            StringBuilder directoryInfoStringBuilder=new StringBuilder();
+            StringBuilder fileInfoStringBuilder=new StringBuilder();
+            File dir=new File(realPath);
+            File[] fileSystemEntityArray=dir.listFiles();
+            if(fileSystemEntityArray!=null){
+                for(File item : fileSystemEntityArray){
+                    String entityName=item.getName();
+                    Date date=new Date(item.lastModified());
+                    SimpleDateFormat format=new SimpleDateFormat("yyyy/MM/dd HH:mm");
+                    String lastModifiedTime=format.format(date);
+                    if(item.isDirectory()){
+                        String directoryInfoString=entityName+"*"+lastModifiedTime+"*|";
+                        directoryInfoStringBuilder.append(directoryInfoString);
+                    }else{
+                        String fileSize=String.valueOf(item.length());
+                        String fileInfoString=entityName+"*"+lastModifiedTime+"*"+fileSize+"|";
+                        fileInfoStringBuilder.append(fileInfoString);
+                    }
                 }
             }
+            String fileSystemEntityInfoString=directoryInfoStringBuilder.toString()+fileInfoStringBuilder.toString();
+            HandleResponseData(requestSocket,"text/plain", fileSystemEntityInfoString.getBytes(StandardCharsets.UTF_8));
         }
-        String fileSystemEntityInfoString=directoryInfoStringBuilder.toString()+fileInfoStringBuilder.toString();
-        HandleResponseData(requestSocket,"text/plain", fileSystemEntityInfoString.getBytes(StandardCharsets.UTF_8));
     }
 
     private void SetFileInfo(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String[] strDataArray = strDataContent.split("\\|",4);
-        String filePath = GenerateRealPath(strDataArray[0], false);
+        String filePath = ServiceNode.GetInstance().GetRealPath(strDataArray[0], false);
         String fileName = strDataArray[1];
         long fileSize = Long.parseLong(strDataArray[2]);
         FileEntity container=new FileEntity(filePath+"/"+fileName,fileSize);
@@ -237,7 +217,7 @@ public class FileHandler extends BaseRequestHandler {
     private void SendRequestedFile(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String logicPath= URLDecoder.decode(strDataContent,StandardCharsets.UTF_8).split("=",2)[1];
-        String path = GenerateRealPath(logicPath,true);
+        String path = ServiceNode.GetInstance().GetRealPath(logicPath,true);
         File targetFile=new File(path);
         FileInputStream inputStream=new FileInputStream(path);
         String responseHeader="HTTP/1.1 200 OK"+System.lineSeparator()+
@@ -256,7 +236,7 @@ public class FileHandler extends BaseRequestHandler {
 
     private void DeleteFile(RequestSocket requestSocket) throws Exception{
         String logicPath = new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        String path = GenerateRealPath(logicPath,true);
+        String path = ServiceNode.GetInstance().GetRealPath(logicPath,true);
         File targetFile=new File(path);
         boolean result=targetFile.delete();
         if(result)
@@ -281,7 +261,7 @@ public class FileHandler extends BaseRequestHandler {
 
     private void DeleteFolder(RequestSocket requestSocket) throws Exception{
         String logicPath = new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
-        String path = GenerateRealPath(logicPath,false);
+        String path = ServiceNode.GetInstance().GetRealPath(logicPath,false);
         File targetFile=new File(path);
         boolean result=deleteDir(targetFile);
         if(result)
@@ -293,7 +273,7 @@ public class FileHandler extends BaseRequestHandler {
     private void CreateFolder(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String[] strDataArray = strDataContent.split("\\|",2);
-        String path = GenerateRealPath(strDataArray[0],false);
+        String path = ServiceNode.GetInstance().GetRealPath(strDataArray[0],false);
         String folderName = strDataArray[1];
         String fullPath = path + "/" + folderName;
         File targetFolder = new File(fullPath);
@@ -308,7 +288,7 @@ public class FileHandler extends BaseRequestHandler {
     private void RenameEntry(RequestSocket requestSocket) throws Exception{
         String strDataContent=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         String[] strDataArray = strDataContent.split("\\|",3);
-        String path = GenerateRealPath(strDataArray[0],false);
+        String path = ServiceNode.GetInstance().GetRealPath(strDataArray[0],false);
         String original_name = strDataArray[1];
         String new_name = strDataArray[2];
         File original_entry = new File(path+"/"+original_name);
