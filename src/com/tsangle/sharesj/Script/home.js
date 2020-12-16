@@ -112,7 +112,19 @@
     $( window ).resize(function() {
         setMaxWidthForNav();
     });
-    var showAlertMessage = function (message, type = "Info", style = "info") {
+    var showAlertMessage = function (message, type = "Info") {
+        var style = "";
+        switch(type){
+            case "Info":
+                style = "success"
+                break;
+            case "Warning":
+                style = "warning"
+                break;
+            case "Error":
+                style = "danger"
+                break;
+        }
         $("<div class='alert alert-" + style + " alert-dismissable fade show text-break' role='alert'>" +
             "<strong>" + type + ": </strong>" + message +
             "</div>").appendTo(alertModalBody).hide().fadeIn();
@@ -215,7 +227,7 @@
                     thisObj._checkUploadingProgress(thisObj, 0, "0 B/s", "0 B/s");
                 } else {
                     resetUploadingModal();
-                    showAlertMessage(data, "Error", "danger");
+                    showAlertMessage(data, "Error");
                 }
             });
         }
@@ -230,9 +242,9 @@
                 $.post("/File/CancelUploading", thisObj.serverCacheID, function (data) {
                     resetUploadingModal();
                     if (data.slice(0, 1) !== "#") {
-                        showAlertMessage("Uploading task canceled!", "Info", "success");
+                        showAlertMessage("Uploading task canceled!", "Info");
                     } else {
-                        showAlertMessage(data, "Error", "danger");
+                        showAlertMessage(data, "Error");
                     }
                 });
             }
@@ -257,13 +269,13 @@
                         thisObj._checkUploadingProgress(thisObj, timeStamp, uploadingSpeed, writingSpeed);
                     }else{
                         resetUploadingModal();
-                        showAlertMessage("<u>" + thisObj.fileName + "</u> uploaded!", "Info", "success");
+                        showAlertMessage("<u>" + thisObj.fileName + "</u> uploaded!", "Info");
                         refreshFileSystemEntryList();
                     }
                 } else {
                     if(!thisObj.isCanceled && !thisObj.errorDetected){
                         thisObj.errorDetected = true;
-                        showAlertMessage(data, "Error", "danger");
+                        showAlertMessage(data, "Error");
                         thisObj._cancelUploadingImpl(thisObj);
                     }
                 }
@@ -282,7 +294,7 @@
             httpRequest.open("POST", "/File/UploadFileChunk/"+thisObj.serverCacheID+"&"+index * thisObj.chunkSize);
             httpRequest.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
             httpRequest.onerror = function () {
-                showAlertMessage("Unknown error encountered while uploading Chunk #" + index + " of [" + thisObj.fileName + "]", "Error", "danger");
+                showAlertMessage("Unknown error encountered while uploading Chunk #" + index + " of [" + thisObj.fileName + "]", "Error");
                 thisObj._cancelUploadingImpl(thisObj);
             };
             httpRequest.send(currentChunk);
@@ -299,7 +311,7 @@
             fileUploader = new FileUploader(file, sessionStorage.getItem("path"), fileNameInput.val(), uploadingThreadCount);
             fileUploader.startUploading();
         } else {
-            showAlertMessage("Please select a file!", "Warning", "warning");
+            showAlertMessage("Please select a file!", "Warning");
         }
     });
     cancelUploadingButton.click(function () {
@@ -314,15 +326,15 @@
             var folderInfo = sessionStorage.getItem("path") + "|" + folderNameInput.val();
             $.post("/File/CreateFolder", folderInfo, function (data) {
                 if (data.slice(0, 1) !== "#") {
-                    showAlertMessage("<u>"+folderNameInput.val()+"</u> created!", "Info", "success");
+                    showAlertMessage("<u>"+folderNameInput.val()+"</u> created!", "Info");
                     creatingFolderModal.modal("hide");
                     refreshFileSystemEntryList();
                 } else {
-                    showAlertMessage(data, "Error", "danger");
+                    showAlertMessage(data, "Error");
                 }
             });
         } else {
-            showAlertMessage("Please input the folder name!", "Warning", "warning");
+            showAlertMessage("Please input the folder name!", "Warning");
         }
     });
     cancelCreatingButton.click(function(){
@@ -336,11 +348,11 @@
             var fullPath = sessionStorage.getItem("path") + "/" + fileModalLabel.text();
             $.post("/File/DeleteFile", fullPath, function (data) {
                 if (data.slice(0, 1) !== "#") {
-                    showAlertMessage("<u>"+fileModalLabel.text()+"</u> deleted!", "Info", "success");
+                    showAlertMessage("<u>"+fileModalLabel.text()+"</u> deleted!", "Info");
                     fileModal.modal("hide");
                     refreshFileSystemEntryList();
                 } else {
-                    showAlertMessage(data, "Error", "danger");
+                    showAlertMessage(data, "Error");
                 }
             });
         });
@@ -385,10 +397,10 @@
             var fullPath = sessionStorage.getItem("path") + "/" + selectedEntry.attr("entryName");
             $.post("/File/Delete"+type, fullPath, function (data) {
                 if (data.slice(0, 1) !== "#") {
-                    showAlertMessage("<u>"+selectedEntry.attr("entryName")+"</u> deleted!", "Info", "success");
+                    showAlertMessage("<u>"+selectedEntry.attr("entryName")+"</u> deleted!", "Info");
                     refreshFileSystemEntryList();
                 } else {
-                    showAlertMessage(data, "Error", "danger");
+                    showAlertMessage(data, "Error");
                 }
             });
         });
@@ -421,15 +433,15 @@
             var renamingInfo = sessionStorage.getItem("path") +"|"+selectedEntry.attr("entryName")+ "|" + newEntryNameInput.val();
             $.post("/File/RenameEntry", renamingInfo, function (data) {
                 if (data.slice(0, 1) !== "#") {
-                    showAlertMessage("<u>" + selectedEntry.attr("entryName") + "</u> renamed as <u>" + newEntryNameInput.val() + "</u>!", "Info", "success");
+                    showAlertMessage("<u>" + selectedEntry.attr("entryName") + "</u> renamed as <u>" + newEntryNameInput.val() + "</u>!", "Info");
                     renamingEntryModal.modal("hide");
                     refreshFileSystemEntryList();
                 } else {
-                    showAlertMessage(data, "Error", "danger");
+                    showAlertMessage(data, "Error");
                 }
             });
         } else {
-            showAlertMessage("Please input a new name!", "Warning", "warning");
+            showAlertMessage("Please input a new name!", "Warning");
         }
     });
 
@@ -543,7 +555,7 @@
                     showFileInfo($(this).attr("entryName"));
                 });
             } else {
-                showAlertMessage(data, "Error", "danger");
+                showAlertMessage(data, "Error");
             }
 
         });
@@ -627,13 +639,21 @@
     });
 
     creatingButton.click(function(){
-        toggleFloatingMenu();
-        creatingFolderModal.modal("show");
+        if(sessionStorage.getItem("path")===""){
+            showAlertMessage("Cannot create folders outside disks!", "Warning");
+        }else{
+            toggleFloatingMenu();
+            creatingFolderModal.modal("show");
+        }
     });
 
     uploadingButton.click(function(){
-        toggleFloatingMenu();
-        uploadingModal.modal("show");
+        if(sessionStorage.getItem("path")===""){
+            showAlertMessage("Cannot upload files outside disks!", "Warning");
+        }else{
+            toggleFloatingMenu();
+            uploadingModal.modal("show");
+        }
     });
 
     settingButton.click(function(){

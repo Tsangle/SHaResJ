@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class ServiceNode {
-    private Map<String, String> sharedFolders;
+    private Map<String, String> sharedDisks;
 
     private String nodeName;
 
@@ -19,7 +19,7 @@ public class ServiceNode {
     private ServiceNode(){
         port=10320;
         creationTime=System.currentTimeMillis();
-        sharedFolders=new TreeMap<>();
+        sharedDisks =new TreeMap<>();
     }
 
     static public ServiceNode GetInstance(){
@@ -29,16 +29,16 @@ public class ServiceNode {
         return instance;
     }
 
-    public void SetSharedFolder(Map<String, String> sharedFolders){
-        for (Map.Entry<String, String> entry : sharedFolders.entrySet()) {
+    public void SetSharedDisk(Map<String, String> sharedDisks){
+        for (Map.Entry<String, String> entry : sharedDisks.entrySet()) {
             String path=entry.getValue().replace('\\', '/');
             if (path.endsWith("/")) path=path.substring(0,path.length()-1);
-            this.sharedFolders.put(entry.getKey(), path);
+            this.sharedDisks.put(entry.getKey(), path);
         }
     }
 
-    public Map<String, String> GetSharedFolders(){
-        return sharedFolders;
+    public Map<String, String> GetSharedDisk(){
+        return sharedDisks;
     }
 
     public String GetRealPath(String logicPath, boolean isFile) throws Exception{
@@ -50,7 +50,7 @@ public class ServiceNode {
             path=path.substring(1);
         }
         String[] folders=path.split("/", 2);
-        String realRootFolder=sharedFolders.get(folders[0]);
+        String realRootFolder= sharedDisks.get(folders[0]);
         if (realRootFolder==null){
             throw new Exception("The root folder in the give path cannot be found in shared folders: [" + logicPath + "]");
         }

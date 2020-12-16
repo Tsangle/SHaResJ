@@ -33,12 +33,12 @@ public class FileHandler extends BaseRequestHandler {
     protected void GetFileSystemEntries(RequestSocket requestSocket) throws Exception{
         String logicPath=new String(requestSocket.GetAdditionalData(), StandardCharsets.UTF_8);
         if (logicPath.isEmpty()){
-            StringBuilder sharedFolderInfoStringBuilder=new StringBuilder();
-            for (Map.Entry<String, String> entry : ServiceNode.GetInstance().GetSharedFolders().entrySet()){
-                String sharedFolderInfoString=entry.getKey()+"**|";
-                sharedFolderInfoStringBuilder.append(sharedFolderInfoString);
+            StringBuilder sharedDiskInfoStringBuilder=new StringBuilder();
+            for (Map.Entry<String, String> entry : ServiceNode.GetInstance().GetSharedDisk().entrySet()){
+                String sharedDiskInfoString=entry.getKey()+"**|";
+                sharedDiskInfoStringBuilder.append(sharedDiskInfoString);
             }
-            HandleResponseData(requestSocket,"text/plain", sharedFolderInfoStringBuilder.toString().getBytes(StandardCharsets.UTF_8));
+            HandleResponseData(requestSocket,"text/plain", sharedDiskInfoStringBuilder.toString().getBytes(StandardCharsets.UTF_8));
         }else {
             String realPath=ServiceNode.GetInstance().GetRealPath(logicPath,false);
             StringBuilder directoryInfoStringBuilder=new StringBuilder();

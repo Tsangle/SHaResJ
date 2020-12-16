@@ -4,6 +4,7 @@ import com.tsangle.sharesj.HttpServer.RequestSocket;
 
 import java.io.*;
 import java.net.SocketException;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 public abstract class BaseRequestHandler {
@@ -11,7 +12,7 @@ public abstract class BaseRequestHandler {
 
     void HandleResponseMessage(RequestSocket requestSocket, String contentType, String message){
         try{
-            byte[] messageData=message.getBytes();
+            byte[] messageData=message.getBytes(StandardCharsets.UTF_8);
             HandleResponseData(requestSocket,contentType,messageData);
         }catch (Exception e){
             HandleException(requestSocket,logger,e);

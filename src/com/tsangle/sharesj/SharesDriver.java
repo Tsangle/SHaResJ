@@ -16,15 +16,15 @@ public class SharesDriver {
         try {
             HttpListener listener=new HttpListener();
             Scanner scanner=new Scanner(System.in);
-            System.out.println("Please input a comma-separated string to set the folders for sharing, each item should follow the format of \"DisplayName-PATH\"(e.g. D Drive-D:/My Document,Temp Folder-G:/temp)");
-            String sharedFolderString=scanner.nextLine();
-            String[] sharedFolders=sharedFolderString.split(",");
-            Map<String, String> sharedFolderMap=new TreeMap<>();
-            for (String sharedFolder: sharedFolders) {
+            System.out.println("Please input a comma-separated string to set the disks for sharing, each item should follow the format of \"DisplayName-PATH\"(e.g. D Drive-D:/My Document,Temp Folder-G:/temp)");
+            String sharedDiskString=scanner.nextLine();
+            String[] sharedDisks=sharedDiskString.split(",");
+            Map<String, String> sharedDiskMap=new TreeMap<>();
+            for (String sharedFolder: sharedDisks) {
                 String[] sharedFolderInfo=sharedFolder.split("-",2);
-                sharedFolderMap.put(sharedFolderInfo[0], sharedFolderInfo[1]);
+                sharedDiskMap.put(sharedFolderInfo[0], sharedFolderInfo[1]);
             }
-            ServiceNode.GetInstance().SetSharedFolder(sharedFolderMap);
+            ServiceNode.GetInstance().SetSharedDisk(sharedDiskMap);
             System.out.println("Please input the name of this machine:");
             String machineName=scanner.nextLine();
             ServiceNode.GetInstance().SetNodeName(machineName);
