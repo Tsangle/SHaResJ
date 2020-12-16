@@ -4,9 +4,9 @@ import com.tsangle.sharesj.HttpServer.HttpListener;
 import com.tsangle.sharesj.HttpServer.ServiceNode;
 
 import java.io.*;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 import java.util.logging.Logger;
 
 public class SharesDriver {
@@ -19,7 +19,7 @@ public class SharesDriver {
             System.out.println("Please input a comma-separated string to set the folders for sharing, each item should follow the format of \"DisplayName-PATH\"(e.g. D Drive-D:/My Document,Temp Folder-G:/temp)");
             String sharedFolderString=scanner.nextLine();
             String[] sharedFolders=sharedFolderString.split(",");
-            Map<String, String> sharedFolderMap=new HashMap<>();
+            Map<String, String> sharedFolderMap=new TreeMap<>();
             for (String sharedFolder: sharedFolders) {
                 String[] sharedFolderInfo=sharedFolder.split("-",2);
                 sharedFolderMap.put(sharedFolderInfo[0], sharedFolderInfo[1]);

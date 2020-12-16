@@ -2,8 +2,8 @@ package com.tsangle.sharesj.HttpServer;
 
 import java.io.File;
 import java.net.Inet4Address;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class ServiceNode {
     private Map<String, String> sharedFolders;
@@ -19,7 +19,7 @@ public class ServiceNode {
     private ServiceNode(){
         port=10320;
         creationTime=System.currentTimeMillis();
-        sharedFolders=new HashMap<>();
+        sharedFolders=new TreeMap<>();
     }
 
     static public ServiceNode GetInstance(){

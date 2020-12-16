@@ -402,7 +402,7 @@
             type = "File";
         }
         nameInPropForm.html(selectedEntry.attr("entryName"));
-        pathInPropForm.html("Root"+sessionStorage.getItem("path")+"/"+selectedEntry.attr("entryName"));
+        pathInPropForm.html(sessionStorage.getItem("path").substring(1)+"/"+selectedEntry.attr("entryName"));
         urlInPropForm.html(window.location.href+"UrlAccess/"+encodeURIComponent(sessionStorage.getItem("path")+"/"+selectedEntry.attr("entryName")));
         lastModifiedTimeInPropForm.html(selectedEntry.attr("lastModifiedTime"));
         typeInPropForm.html(type);
@@ -493,8 +493,8 @@
                                 "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='folderIcon fas fa-folder' aria-hidden='true'></i></div></div>" +
                                 "<div class='d-inline-block verticalCenter pb-1' style='max-width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;'>" + entryName + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
                                 lastModifiedTime + "</div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                            folderCount++;
                         }
-                        folderCount++;
                     } else {
                         var fileSizeDisplay = parseFloat(size);
                         var unit = 'B';
