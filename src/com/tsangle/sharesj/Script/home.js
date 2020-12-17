@@ -444,6 +444,27 @@
             showAlertMessage("Please input a new name!", "Warning");
         }
     });
+    var calcSizeToDisplay = function (size) {
+        var unit = 'B';
+        var fileSizeDisplay = size;
+        if (fileSizeDisplay / 1024 > 1) {
+            fileSizeDisplay = fileSizeDisplay / 1024;
+            unit = 'KB';
+            if (fileSizeDisplay / 1024 > 1) {
+                fileSizeDisplay = fileSizeDisplay / 1024;
+                unit = 'MB';
+                if (fileSizeDisplay / 1024 > 1) {
+                    fileSizeDisplay = fileSizeDisplay / 1024;
+                    unit = 'GB';
+                    if (fileSizeDisplay / 1024 > 1) {
+                        fileSizeDisplay = fileSizeDisplay / 1024;
+                        unit = 'TB';
+                    }
+                }
+            }
+        }
+        return fileSizeDisplay.toFixed(2) + " " + unit;
+    };
 
     var getFileSystemEntry = function (path) {
         sessionStorage.setItem("path", path);
@@ -468,8 +489,8 @@
             }
             getFileSystemEntry(targetPath);
         });
-        folderNumberElement.html('<div class="spinner-grow text-secondary" role="status" style="width:.7rem;height:.7rem;"></div>');
-        fileNumberElement.html('<div class="spinner-grow text-secondary" role="status" style="width:.7rem;height:.7rem;"></div>');
+        folderNumberElement.html('...');
+        fileNumberElement.html('...');
         fileListTableBody.empty();
         fileListSpinner.show();
         $.post("/File/GetFileSystemEntries", path, function (data) {
@@ -481,52 +502,48 @@
                 for (var index = 0; index < fileSystemEntries.length - 1; index++) {
                     var entryInfo = fileSystemEntries[index].split("*");
                     var entryName = entryInfo[0];
-                    var lastModifiedTime = entryInfo[1];
-                    var size = entryInfo[2];
-                    var tooltipContent =
-                        "<div class=\"row tooltipMenu m-0\">" +
-                            "<div class=\"col-4 border-right d-flex tooltipOptionLeft tooltipDeletingOption tooltipOption justify-content-center\">" +
-                                "<i class=\"fas fa-trash-alt\"></i>" +
-                            "</div>" +
-                            "<div class=\"col-4 border-right d-flex tooltipRenamingOption tooltipOption justify-content-center\">" +
-                                "<i class=\"fas fa-highlighter\"></i>" +
-                            "</div>" +
-                            "<div class=\"col-4 d-flex tooltipOptionRight tooltipPropertyOption tooltipOption justify-content-center\">" +
-                                "<i class=\"fas fa-eye\"></i>" +
-                            "</div>" +
-                        "</div>";
-                    if (size === "") {
-                        if (lastModifiedTime === "") {
-                            $("<tr class='entryTableFolder' entryName=\"" + entryName + "\" size='-' lastModifiedTime='-'>" +
-                                "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='HddIcon fas fa-hdd' aria-hidden='true'></i></div></div>" +
-                                "<div class='d-inline-block verticalCenter pb-1' style='max-width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;'>" + entryName + "</div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
-                        } else {
+                    if (path === "") {
+                        var usedSpace = entryInfo[1];
+                        var totalSpace = entryInfo[2];
+                        var usedPercent = 100*usedSpace/totalSpace;
+                        var progressbarType = "bg-info";
+                        if (usedPercent>=90){
+                            progressbarType = "bg-danger";
+                        }
+                        $("<tr class='entryTableFolder' entryName=\"" + entryName + "\" size='-' lastModifiedTime='-'>" +
+                            "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='HddIcon fas fa-hdd' aria-hidden='true'></i></div></div>" +
+                            "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;margin-bottom:.125rem;position:relative;'>" + entryName +
+                            "<div style='font-size:.7rem;color:rgb(150,150,150);position:absolute;bottom:0;right:0;'>" + calcSizeToDisplay(usedSpace) + " / " + calcSizeToDisplay(totalSpace) + "</div></div><div class='progress' style='height:.5rem;'>" +
+                            "<div class='progress-bar "+progressbarType+"' role='progressbar' style='width: "+usedPercent+"%;' aria-valuenow='"+usedPercent+"' aria-valuemin='0' aria-valuemax='100'></div></div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                    } else {
+                        var lastModifiedTime = entryInfo[1];
+                        var size = entryInfo[2];
+                        var tooltipContent =
+                            "<div class=\"row tooltipMenu m-0\">" +
+                                "<div class=\"col-4 border-right d-flex tooltipOptionLeft tooltipDeletingOption tooltipOption justify-content-center\">" +
+                                    "<i class=\"fas fa-trash-alt\"></i>" +
+                                "</div>" +
+                                "<div class=\"col-4 border-right d-flex tooltipRenamingOption tooltipOption justify-content-center\">" +
+                                    "<i class=\"fas fa-highlighter\"></i>" +
+                                "</div>" +
+                                "<div class=\"col-4 d-flex tooltipOptionRight tooltipPropertyOption tooltipOption justify-content-center\">" +
+                                    "<i class=\"fas fa-eye\"></i>" +
+                                "</div>" +
+                            "</div>";
+                        if (size === "") {
                             $("<tr class='entryTableItem entryTableFolder' entryName=\"" + entryName + "\" size='-' lastModifiedTime='" + lastModifiedTime + "' data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
                                 "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='folderIcon fas fa-folder' aria-hidden='true'></i></div></div>" +
-                                "<div class='d-inline-block verticalCenter pb-1' style='max-width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;'>" + entryName + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
+                                "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);'><div class='text-truncate' style='width:100%;margin-bottom:.125rem;'>" + entryName + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
                                 lastModifiedTime + "</div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
                             folderCount++;
+                        } else {
+                            var fileSizeDisplay = calcSizeToDisplay(parseFloat(size));
+                            $("<tr class='entryTableItem entryTableFile' index='" + filenameList.length + "' size='" + size + " B (about " + fileSizeDisplay + ")' lastModifiedTime='" + lastModifiedTime + "' entryName=\"" + entryName + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
+                                "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='fileIcon fas fa-file-alt' aria-hidden='true'></i></div></div>" +
+                                "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);p'><div class='text-truncate' style='width:100%;margin-bottom:.125rem;'>" + entryName + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
+                                lastModifiedTime + "<div class='float-right'>" + fileSizeDisplay + "</div></div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
+                            filenameList.push(entryInfo[0]);
                         }
-                    } else {
-                        var fileSizeDisplay = parseFloat(size);
-                        var unit = 'B';
-                        if (fileSizeDisplay / 1024 > 1) {
-                            fileSizeDisplay = fileSizeDisplay / 1024;
-                            unit = 'KB';
-                            if (fileSizeDisplay / 1024 > 1) {
-                                fileSizeDisplay = fileSizeDisplay / 1024;
-                                unit = 'MB';
-                                if (fileSizeDisplay / 1024 > 1) {
-                                    fileSizeDisplay = fileSizeDisplay / 1024;
-                                    unit = 'GB';
-                                }
-                            }
-                        }
-                        $("<tr class='entryTableItem entryTableFile' index='" + filenameList.length + "' size='" + size + " B (about " + fileSizeDisplay.toFixed(2) + " " + unit + ")' lastModifiedTime='" + lastModifiedTime + "' entryName=\"" + entryName + "\" data-toggle='tooltip' data-trigger='manual' data-placement='auto' data-html='true' title='" + tooltipContent + "'>" +
-                            "<td class='px-0 py-1' style='position:relative;'><div class='card d-inline-block mr-2 entryIconCard'><div class='card-body p-2 entryIconCardBody'><i class='fileIcon fas fa-file-alt' aria-hidden='true'></i></div></div>" +
-                            "<div class='d-inline-block verticalCenter pb-1' style='width:calc(100% - 3rem);p'><div class='text-truncate' style='width:100%;'>" + entryName + "</div><div style='font-size:.7rem;color:rgb(150,150,150);line-height:100%;'>" +
-                            lastModifiedTime + "<div class='float-right'>" + fileSizeDisplay.toFixed(2) + " " + unit + "</div></div></div></td></tr>").appendTo(fileListTableBody).hide().fadeIn();
-                        filenameList.push(entryInfo[0]);
                     }
                 }
                 folderNumberElement.text(folderCount);

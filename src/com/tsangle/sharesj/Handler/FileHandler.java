@@ -35,7 +35,10 @@ public class FileHandler extends BaseRequestHandler {
         if (logicPath.isEmpty()){
             StringBuilder sharedDiskInfoStringBuilder=new StringBuilder();
             for (Map.Entry<String, String> entry : ServiceNode.GetInstance().GetSharedDisk().entrySet()){
-                String sharedDiskInfoString=entry.getKey()+"**|";
+                File file = new File(entry.getValue());
+                long totalSpace = file.getTotalSpace();
+                long freeSpace = file.getFreeSpace();
+                String sharedDiskInfoString=entry.getKey()+"*"+(totalSpace-freeSpace)+"*"+totalSpace+"|";
                 sharedDiskInfoStringBuilder.append(sharedDiskInfoString);
             }
             HandleResponseData(requestSocket,"text/plain", sharedDiskInfoStringBuilder.toString().getBytes(StandardCharsets.UTF_8));
