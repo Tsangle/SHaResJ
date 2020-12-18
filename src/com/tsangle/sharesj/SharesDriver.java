@@ -31,7 +31,7 @@ public class SharesDriver {
             listener.Start();
             boolean continueScannerLoop=true;
             System.out.println("You can enter [E] to exit.");
-            while (continueScannerLoop){
+            while (continueScannerLoop&&scanner.hasNextLine()){
                 switch (scanner.nextLine()){
                     case "e":
                     case "E":
